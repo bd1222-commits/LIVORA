@@ -1,0 +1,6 @@
+{
+  "name": "LIVORA | ليفورا",
+  "description": "متجر ليفورا النسائي الفاخر - إكسسوارات، مكياج، ومنتجات عناية وجمال راقية مخصصة للسوق اليمني مع طلب مباشر عبر واتساب وإدارة محتوى متكاملة.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
