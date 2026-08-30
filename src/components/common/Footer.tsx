@@ -15,8 +15,12 @@ export const Footer: React.FC = () => {
         {/* Trust Badges Strip */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 pb-8 sm:pb-12 mb-8 sm:mb-12 border-b border-white/10 text-center">
           <div className="flex flex-col items-center">
-            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-[#C8A96B]/15 border border-[#C8A96B]/30 flex items-center justify-center text-[#C8A96B] mb-2 sm:mb-3">
-              <Sparkles className="w-4 h-4 sm:w-6 sm:h-6" />
+            <div
+              onClick={() => navigateTo('studio')}
+              className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-[#C8A96B]/15 border border-[#C8A96B]/30 flex items-center justify-center text-[#C8A96B] mb-2 sm:mb-3 cursor-pointer select-none group"
+              title="أصالة وجودة مضمونة"
+            >
+              <Sparkles className="w-4 h-4 sm:w-6 sm:h-6 group-hover:rotate-12 transition-transform" />
             </div>
             <h4 className="font-bold text-xs sm:text-sm text-[#F6F0E8]">أصالة وجودة مضمونة</h4>
             <p className="text-[10px] sm:text-xs text-stone-400 mt-0.5 sm:mt-1">منتجات مختارة بعناية فائقة وتصاميم حصرية</p>

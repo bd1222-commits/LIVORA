@@ -545,4 +545,18 @@ export const defaultSiteSettings: SiteSettings = {
     code: 'YER',
     exchangeRateToUSD: 530,
   },
+  adminCredentials: {
+    email: 'admin@livora.com',
+    password: 'admin',
+  },
+  users: [
+    {
+      id: 'usr_main_admin',
+      name: 'الآدمن الرئيسي (LIVORA)',
+      email: 'admin@livora.com',
+      password: 'admin',
+      role: 'admin',
+      createdAt: '2026-01-01',
+    },
+  ],
 };

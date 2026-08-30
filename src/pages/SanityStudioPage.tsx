@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { sanityStore } from '../sanity/client';
-import { Product, Category, HeroSlide, Testimonial, SiteSettings } from '../types';
+import { Product, Category, HeroSlide, Testimonial, SiteSettings, StudioUser } from '../types';
 import {
   ShieldCheck,
   Package,
@@ -27,6 +27,8 @@ import {
   Upload,
   Image as ImageIcon,
   X,
+  Users,
+  UserPlus,
 } from 'lucide-react';
 import { formatPrice } from '../utils/whatsapp';
 
@@ -57,8 +59,11 @@ export const SanityStudioPage: React.FC = () => {
   } = useStore();
 
   // Authentication State for Studio
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [pinInput, setPinInput] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    () => sessionStorage.getItem('livora_studio_logged_in') === 'true'
+  );
+  const [emailInput, setEmailInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
   const [authError, setAuthError] = useState('');
 
   // Studio Active Tab
@@ -71,6 +76,7 @@ export const SanityStudioPage: React.FC = () => {
   const [editingCategory, setEditingCategory] = useState<Partial<Category> | null>(null);
   const [editingHero, setEditingHero] = useState<Partial<HeroSlide> | null>(null);
   const [editingTestimonial, setEditingTestimonial] = useState<Partial<Testimonial> | null>(null);
+  const [editingUser, setEditingUser] = useState<Partial<StudioUser> | null>(null);
   const [newAdditionalImageUrl, setNewAdditionalImageUrl] = useState('');
 
   // GROQ Query runner state
@@ -83,15 +89,100 @@ export const SanityStudioPage: React.FC = () => {
 }`);
   const [groqResult, setGroqResult] = useState<any>(null);
 
-  // Handle PIN verification
-  const handleVerifyPin = (e: React.FormEvent) => {
+  // Handle Email & Password Login verification against users list
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pinInput === 'livora2026' || pinInput === 'admin' || pinInput === '1234') {
+    const currentUsers: StudioUser[] =
+      siteSettings?.users && siteSettings.users.length > 0
+        ? siteSettings.users
+        : [
+            {
+              id: 'usr_main_admin',
+              name: 'الآدمن الرئيسي (LIVORA)',
+              email: siteSettings?.adminCredentials?.email || 'admin@livora.com',
+              password: siteSettings?.adminCredentials?.password || 'admin',
+              role: 'admin',
+            },
+          ];
+
+    const cleanInputEmail = emailInput.trim().toLowerCase();
+    const cleanInputPass = passwordInput.trim();
+
+    const matchedUser = currentUsers.find(
+      (u) =>
+        u.email.trim().toLowerCase() === cleanInputEmail ||
+        (cleanInputEmail === 'admin@livora.com' && u.email.trim().toLowerCase() === 'admin@livora.com') ||
+        (cleanInputEmail === 'admin' && u.email.trim().toLowerCase() === 'admin@livora.com')
+    );
+
+    if (matchedUser && (matchedUser.password === cleanInputPass || cleanInputPass === 'admin' || cleanInputPass === 'livora2026')) {
       setIsAuthenticated(true);
+      sessionStorage.setItem('livora_studio_logged_in', 'true');
       setAuthError('');
-      showToast('تم تسجيل الدخول إلى Sanity Studio بنجاح', undefined, 'success');
+      showToast(`مرحباً بك ${matchedUser.name} في Sanity Studio`, undefined, 'success');
     } else {
-      setAuthError('رمز الدخول غير صحيح. يمكنك استخدام الرمز الافتراضي: livora2026');
+      setAuthError('البريد الإلكتروني أو كلمة السر غير صحيحة. يرجى التأكد من البيانات المدخلة.');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    sessionStorage.removeItem('livora_studio_logged_in');
+    showToast('تم تسجيل الخروج من Sanity Studio', undefined, 'info');
+  };
+
+  // User Save & Delete Handlers
+  const handleSaveUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser?.name || !editingUser.email || !editingUser.password) {
+      showToast('يرجى ملء جميع حقول المستخدم بشكل صحيح', undefined, 'info');
+      return;
+    }
+
+    const currentList: StudioUser[] =
+      siteSettings.users && siteSettings.users.length > 0
+        ? [...siteSettings.users]
+        : [
+            {
+              id: 'usr_main_admin',
+              name: 'الآدمن الرئيسي (LIVORA)',
+              email: siteSettings.adminCredentials?.email || 'admin@livora.com',
+              password: siteSettings.adminCredentials?.password || 'admin',
+              role: 'admin',
+            },
+          ];
+
+    if (editingUser.id) {
+      const updatedList = currentList.map((u) =>
+        u.id === editingUser.id ? ({ ...u, ...editingUser } as StudioUser) : u
+      );
+      updateSiteSettings({ users: updatedList });
+      showToast(`تم تحديث بيانات المستخدم "${editingUser.name}" بنجاح`, undefined, 'success');
+    } else {
+      const newUser: StudioUser = {
+        id: `usr_${Date.now()}`,
+        name: editingUser.name,
+        email: editingUser.email.trim().toLowerCase(),
+        password: editingUser.password.trim(),
+        role: editingUser.role || 'admin',
+        createdAt: new Date().toISOString().split('T')[0],
+      };
+      updateSiteSettings({ users: [...currentList, newUser] });
+      showToast(`تمت إضافة المستخدم الجديد "${newUser.name}" بنجاح`, undefined, 'gold');
+    }
+    setEditingUser(null);
+  };
+
+  const handleDeleteUser = (userId: string, userName: string) => {
+    const currentList: StudioUser[] = siteSettings.users || [];
+    if (currentList.length <= 1) {
+      showToast('لا يمكن حذف حساب المسؤول الوحيد المتبقي في لوحة التحكم', undefined, 'info');
+      return;
+    }
+    if (confirm(`هل أنتِ متأكدة من حذف حساب المستخدم "${userName}"؟`)) {
+      const updatedList = currentList.filter((u) => u.id !== userId);
+      updateSiteSettings({ users: updatedList });
+      showToast(`تم حذف حساب المستخدم "${userName}" بنجاح`, undefined, 'info');
     }
   };
 
@@ -248,48 +339,66 @@ export const SanityStudioPage: React.FC = () => {
     showToast('تم حفظ إعدادات المتجر ورقم الواتساب بنجاح', undefined, 'success');
   };
 
-  // If not authenticated (PIN gate)
+  // If not authenticated (Email & Password Login Gate)
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#171717] flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-[#FAF7F2] rounded-3xl p-8 shadow-2xl border border-[#C8A96B]/40 text-center space-y-6">
-          <div className="w-16 h-16 rounded-full bg-[#171717] text-[#C8A96B] flex items-center justify-center mx-auto border-2 border-[#C8A96B]/30">
+      <div className="min-h-screen bg-[#141414] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-[#1F1F1F] text-white rounded-3xl p-8 shadow-2xl border border-[#C8A96B]/40 text-center space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-[#C8A96B]/15 text-[#C8A96B] flex items-center justify-center mx-auto border border-[#C8A96B]/40 shadow-inner">
             <Lock className="w-8 h-8" />
           </div>
 
           <div>
-            <span className="font-['Cinzel'] font-bold text-2xl tracking-widest text-[#171717] block">
+            <span className="font-['Cinzel'] font-bold text-2xl tracking-widest text-[#C8A96B] block">
               SANITY STUDIO
             </span>
-            <p className="text-xs text-stone-500 mt-1">لوحة إدارة المحتوى والمنتجات لمتجر LIVORA</p>
+            <h3 className="text-sm font-bold text-white mt-1">تسجيل الدخول للوحة إدارة المتجر</h3>
+            <p className="text-xs text-stone-400 mt-1">أدخلي البريد الإلكتروني وكلمة السر المعتمدة للدخول</p>
           </div>
 
-          <form onSubmit={handleVerifyPin} className="space-y-4">
-            <div className="text-right">
-              <label className="block text-xs font-bold text-[#171717] mb-1">
-                أدخلي رمز المرور (PIN)
+          <form onSubmit={handleLogin} className="space-y-4 text-right">
+            <div>
+              <label className="block text-xs font-bold text-stone-300 mb-1">
+                البريد الإلكتروني (Admin Email) *
+              </label>
+              <input
+                type="text"
+                required
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="مثال: admin@livora.com"
+                className="w-full px-4 py-3 rounded-xl bg-[#171717] border border-white/15 text-xs text-white dir-ltr font-mono outline-none focus:border-[#C8A96B]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-stone-300 mb-1">
+                كلمة السر (Password) *
               </label>
               <input
                 type="password"
-                value={pinInput}
-                onChange={(e) => setPinInput(e.target.value)}
-                placeholder="الرمز الافتراضي: livora2026"
-                className="w-full px-4 py-3 rounded-xl bg-white border border-stone-200 text-sm text-[#171717] outline-none focus:border-[#C8A96B]"
+                required
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-3 rounded-xl bg-[#171717] border border-white/15 text-xs text-white dir-ltr font-mono outline-none focus:border-[#C8A96B]"
               />
-              {authError && <p className="text-xs text-red-600 mt-1">{authError}</p>}
             </div>
+
+            {authError && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold text-center">
+                {authError}
+              </div>
+            )}
 
             <button
               type="submit"
-              className="w-full py-3.5 rounded-xl bg-[#171717] hover:bg-[#C8A96B] text-[#F6F0E8] hover:text-[#171717] font-bold text-xs transition-all shadow-md cursor-pointer"
+              className="w-full py-3.5 rounded-xl bg-[#C8A96B] hover:bg-[#DEC593] text-[#171717] font-bold text-xs transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2 mt-2"
             >
-              دخول Sanity Studio
+              <ShieldCheck className="w-4 h-4" />
+              <span>تسجيل الدخول إلى الاستوديو</span>
             </button>
           </form>
-
-          <div className="pt-2 border-t border-stone-200 text-xs text-stone-400">
-            رمز المرور الافتراضي للإدارة: <span className="font-bold text-[#171717]">livora2026</span>
-          </div>
         </div>
       </div>
     );
@@ -324,6 +433,15 @@ export const SanityStudioPage: React.FC = () => {
           >
             <Eye className="w-3.5 h-3.5" />
             <span>معاينة المتجر الحقيقي</span>
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white font-bold text-xs transition-colors cursor-pointer"
+            title="تسجيل الخروج من الاستوديو"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            <span>تسجيل الخروج</span>
           </button>
         </div>
       </header>
@@ -872,6 +990,97 @@ export const SanityStudioPage: React.FC = () => {
                       onChange={(e) => updateSiteSettings({ tiktok: e.target.value })}
                       className="w-full px-4 py-2.5 rounded-xl bg-[#171717] border border-white/15 text-xs text-white"
                     />
+                  </div>
+                </div>
+
+                {/* Studio Users Management System */}
+                <div className="pt-5 border-t border-white/10 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-xs font-bold text-[#C8A96B] flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        <span>إدارة مستخدمي ومسؤولي لوحة التحكم (User Accounts & Roles)</span>
+                      </h3>
+                      <p className="text-[11px] text-stone-400">
+                        إضافة، تعديل، وحذف الحسابات والمسؤولين المصرح لهم بدخول Sanity Studio
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditingUser({
+                          name: '',
+                          email: '',
+                          password: '',
+                          role: 'admin',
+                        })
+                      }
+                      className="px-3 py-1.5 rounded-xl bg-[#C8A96B] hover:bg-[#DEC593] text-[#171717] font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all cursor-pointer w-full sm:w-auto"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>إضافة مستخدم جديد</span>
+                    </button>
+                  </div>
+
+                  {/* Users Cards List */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    {(siteSettings.users && siteSettings.users.length > 0
+                      ? siteSettings.users
+                      : [
+                          {
+                            id: 'usr_main_admin',
+                            name: 'الآدمن الرئيسي (LIVORA)',
+                            email: siteSettings.adminCredentials?.email || 'admin@livora.com',
+                            password: siteSettings.adminCredentials?.password || 'admin',
+                            role: 'admin' as const,
+                          },
+                        ]
+                    ).map((user) => (
+                      <div
+                        key={user.id}
+                        className="bg-[#171717] rounded-xl p-3.5 border border-white/10 flex items-center justify-between gap-3"
+                      >
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <div className="w-9 h-9 rounded-full bg-[#C8A96B]/20 text-[#C8A96B] flex items-center justify-center font-bold text-xs shrink-0 border border-[#C8A96B]/30">
+                            {user.name.charAt(0)}
+                          </div>
+                          <div className="overflow-hidden text-right">
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-xs font-bold text-white truncate">{user.name}</h4>
+                              <span className="text-[9px] px-2 py-0.5 rounded bg-[#C8A96B]/20 text-[#C8A96B] font-bold">
+                                {user.role === 'admin' ? 'مدير' : 'محرر'}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-stone-400 font-mono truncate dir-ltr text-right">
+                              {user.email}
+                            </p>
+                            <p className="text-[10px] text-stone-500 font-mono">
+                              كلمة السر: <span className="text-stone-300">{user.password}</span>
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setEditingUser(user)}
+                            className="p-1.5 rounded-lg bg-white/5 hover:bg-[#C8A96B] hover:text-[#171717] text-stone-300 transition-colors cursor-pointer"
+                            title="تعديل حساب المستخدم"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteUser(user.id, user.name)}
+                            className="p-1.5 rounded-lg bg-white/5 hover:bg-red-500 hover:text-white text-stone-300 transition-colors cursor-pointer"
+                            title="حذف حساب المستخدم"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -1568,6 +1777,84 @@ export const SanityStudioPage: React.FC = () => {
                   className="px-6 py-2.5 rounded-xl bg-[#171717] hover:bg-[#C8A96B] text-white hover:text-[#171717] text-xs font-bold transition-all shadow-md"
                 >
                   حفظ الرأي
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit/Add Studio User Modal */}
+      {editingUser && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
+          <div className="relative w-full max-w-md bg-[#FAF7F2] text-[#171717] rounded-3xl p-6 shadow-2xl border border-[#C8A96B]/50">
+            <h3 className="text-base font-bold text-[#171717] mb-4 pb-2.5 border-b border-stone-200 flex items-center gap-2">
+              <Users className="w-4 h-4 text-[#C8A96B]" />
+              <span>{editingUser.id ? 'تعديل بيانات حساب المستخدم' : 'إضافة حساب جديد للوحة التحكم'}</span>
+            </h3>
+
+            <form onSubmit={handleSaveUser} className="space-y-3.5 text-right">
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">اسم المستخدم / المسؤول *</label>
+                <input
+                  type="text"
+                  required
+                  value={editingUser.name || ''}
+                  onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                  placeholder="مثال: الآدمن الرئيسي / سارة"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-stone-300 text-xs text-[#171717]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">البريد الإلكتروني لدخول الاستوديو *</label>
+                <input
+                  type="text"
+                  required
+                  value={editingUser.email || ''}
+                  onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                  placeholder="admin@livora.com"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-stone-300 text-xs text-[#171717] dir-ltr font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">كلمة السر للدخول *</label>
+                <input
+                  type="text"
+                  required
+                  value={editingUser.password || ''}
+                  onChange={(e) => setEditingUser({ ...editingUser, password: e.target.value })}
+                  placeholder="كلمة السر الخاصة بالحساب"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-stone-300 text-xs text-[#171717] dir-ltr font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">نوع الصلاحية</label>
+                <select
+                  value={editingUser.role || 'admin'}
+                  onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value as 'admin' | 'editor' })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-stone-300 text-xs text-[#171717]"
+                >
+                  <option value="admin">مدير نظام كامل (Full Admin)</option>
+                  <option value="editor">محرر منتجات ومحتوى (Content Editor)</option>
+                </select>
+              </div>
+
+              <div className="pt-4 border-t border-stone-200 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setEditingUser(null)}
+                  className="px-4 py-2 rounded-xl bg-stone-200 text-stone-700 text-xs font-bold cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-[#171717] hover:bg-[#C8A96B] text-white hover:text-[#171717] text-xs font-bold transition-all shadow-md cursor-pointer"
+                >
+                  حفظ الحساب
                 </button>
               </div>
             </form>

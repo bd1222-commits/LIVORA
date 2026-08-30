@@ -99,6 +99,15 @@ export interface Testimonial {
   date?: string;
 }
 
+export interface StudioUser {
+  id: string;
+  name: string;
+  email: string;
+  password: string;
+  role?: 'admin' | 'editor';
+  createdAt?: string;
+}
+
 export interface SiteSettings {
   _type?: string;
   storeName: string;
@@ -127,6 +136,11 @@ export interface SiteSettings {
     symbol: string;
     code: string;
     exchangeRateToUSD?: number;
+  };
+  users?: StudioUser[];
+  adminCredentials?: {
+    email: string;
+    password: string;
   };
 }
 
