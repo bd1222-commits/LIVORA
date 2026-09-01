@@ -5,6 +5,10 @@ import { ExternalLink, Database, ShieldCheck, ArrowLeft } from 'lucide-react';
 export const SanityStudioPage: React.FC = () => {
   const { navigateTo } = useStore();
 
+  const env = (import.meta as any).env || {};
+  const projectId = env.VITE_SANITY_PROJECT_ID || 'a8ha3p9y';
+  const dataset = env.VITE_SANITY_DATASET || 'production';
+
   const SANITY_STUDIO_URL = 'https://manage.sanity.io';
 
   const handleRedirect = () => {
@@ -52,7 +56,7 @@ export const SanityStudioPage: React.FC = () => {
             <span className="font-bold">Sanity CMS Integration Active</span>
           </div>
           <p className="text-[10px] text-stone-500">
-            Project ID: <span className="font-mono text-stone-300">c8y4z2g1</span> | Dataset: <span className="font-mono text-stone-300">production</span>
+            Project ID: <span className="font-mono text-stone-300">{projectId}</span> | Dataset: <span className="font-mono text-stone-300">{dataset}</span>
           </p>
         </div>
       </div>

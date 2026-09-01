@@ -21,7 +21,7 @@ function sanitizeProjectId(rawId: any): string {
       return cleaned;
     }
   }
-  return 'livora-store';
+  return 'a8ha3p9y';
 }
 
 // Helper to safely format API version (Sanity requires '1' or 'YYYY-MM-DD')
@@ -51,9 +51,9 @@ function sanitizeDataset(rawDataset: any): string {
 
 // Environment variables
 const env = (import.meta as any).env || {};
-const rawProjectId = env.VITE_SANITY_PROJECT_ID;
-const rawDataset = env.VITE_SANITY_DATASET;
-const rawApiVersion = env.VITE_SANITY_API_VERSION;
+const rawProjectId = env.VITE_SANITY_PROJECT_ID || 'a8ha3p9y';
+const rawDataset = env.VITE_SANITY_DATASET || 'production';
+const rawApiVersion = env.VITE_SANITY_API_VERSION || '2024-03-01';
 const token = env.VITE_SANITY_TOKEN;
 
 const projectId = sanitizeProjectId(rawProjectId);
@@ -75,7 +75,7 @@ try {
   console.warn('Fallback initializing safe Sanity client:', err);
   try {
     clientInstance = createClient({
-      projectId: 'livora-store',
+      projectId: 'a8ha3p9y',
       dataset: 'production',
       apiVersion: '2024-03-01',
       useCdn: true,
