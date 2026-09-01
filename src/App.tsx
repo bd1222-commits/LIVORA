@@ -1,7 +1,7 @@
 /**
  * LIVORA | ليفورا
  * Luxury E-Commerce for Accessories, Makeup & Skincare in Yemen
- * WhatsApp Ordering & Sanity CMS (/studeo)
+ * WhatsApp Ordering
  */
 
 import React, { useEffect } from 'react';
@@ -19,22 +19,31 @@ import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import { WishlistPage } from './pages/WishlistPage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
-import { SanityStudioPage } from './pages/SanityStudioPage';
 import { motion, AnimatePresence } from 'motion/react';
+import { AuthProvider } from './context/AuthContext';
+import { AdminApp } from './components/admin/AdminApp';
+import { AnalyticsTracker } from './components/common/AnalyticsTracker';
 
 const AppContent: React.FC = () => {
-  const { currentRoute } = useStore();
+  const { currentRoute, loading } = useStore();
 
   // Scroll to top on route change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentRoute]);
 
-  // If in Sanity Studio, render dedicated studio environment
-  if (currentRoute === 'studeo' || currentRoute === 'studio') {
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F6F0E8] text-[#C8A96B]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C8A96B]"></div>
+      </div>
+    );
+  }
+
+  if (currentRoute === 'admin') {
     return (
       <div className="min-h-screen bg-[#171717] font-['Tajawal'] text-right" dir="rtl">
-        <SanityStudioPage />
+        <AdminApp />
         <ToastContainer />
       </div>
     );
@@ -42,6 +51,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F6F0E8] text-[#171717] font-['Tajawal'] antialiased selection:bg-[#C8A96B] selection:text-[#171717]" dir="rtl">
+      <AnalyticsTracker />
       {/* 1. Global Navigation Header */}
       <Header />
 
@@ -81,8 +91,10 @@ const AppContent: React.FC = () => {
 
 export default function App() {
   return (
-    <StoreProvider>
-      <AppContent />
-    </StoreProvider>
+    <AuthProvider>
+      <StoreProvider>
+        <AppContent />
+      </StoreProvider>
+    </AuthProvider>
   );
 }

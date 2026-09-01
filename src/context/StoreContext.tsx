@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { sanityStore } from '../sanity/client';
+import { supabase } from '../lib/supabase/client';
 import { CartItem, Category, HeroSlide, Product, SiteSettings, Testimonial } from '../types';
 import confetti from 'canvas-confetti';
 
@@ -11,12 +11,12 @@ interface ToastMessage {
 }
 
 interface StoreContextType {
-  // Store Data from Sanity
   products: Product[];
   categories: Category[];
   heroSlides: HeroSlide[];
   testimonials: Testimonial[];
-  siteSettings: SiteSettings;
+  siteSettings: SiteSettings | null;
+  loading: boolean;
 
   // Cart
   cart: CartItem[];
@@ -52,22 +52,8 @@ interface StoreContextType {
   routeParams: Record<string, string>;
   navigateTo: (route: string, params?: Record<string, string>) => void;
 
-  // Sanity Store Mutators (Real-time CRUD)
-  createProduct: (product: Product) => void;
-  updateProduct: (id: string, product: Partial<Product>) => void;
-  deleteProduct: (id: string) => void;
-  createCategory: (category: Category) => void;
-  updateCategory: (id: string, category: Partial<Category>) => void;
-  deleteCategory: (id: string) => void;
-  createHeroSlide: (hero: HeroSlide) => void;
-  updateHeroSlide: (id: string, hero: Partial<HeroSlide>) => void;
-  deleteHeroSlide: (id: string) => void;
-  createTestimonial: (testimonial: Testimonial) => void;
-  updateTestimonial: (id: string, testimonial: Partial<Testimonial>) => void;
-  deleteTestimonial: (id: string) => void;
-  updateSiteSettings: (settings: Partial<SiteSettings>) => void;
+  // Data Fetching
   refreshAllData: () => void;
-  resetToDefaultData: () => void;
 
   // Feedback Toasts
   toasts: ToastMessage[];
@@ -78,16 +64,30 @@ interface StoreContextType {
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
-const CART_STORAGE_KEY = 'livora_cart_items_v1';
-const WISHLIST_STORAGE_KEY = 'livora_wishlist_ids_v1';
+const CART_STORAGE_KEY = 'livora_cart_items_v2';
+const WISHLIST_STORAGE_KEY = 'livora_wishlist_ids_v2';
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Sanity Data States
-  const [products, setProducts] = useState<Product[]>(() => sanityStore.getProducts());
-  const [categories, setCategories] = useState<Category[]>(() => sanityStore.getCategories());
-  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>(() => sanityStore.getHeroSlides());
-  const [testimonials, setTestimonials] = useState<Testimonial[]>(() => sanityStore.getTestimonials());
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => sanityStore.getSiteSettings());
+  // Supabase Data States
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>({
+    storeName: 'LIVORA',
+    storeNameEn: 'LIVORA',
+    tagline: '',
+    logo: '/logo.svg',
+    whatsappNumber: '0000',
+    instagram: '',
+    tiktok: '',
+    storeDescription: '',
+    contactInformation: { address: '', phone: '', email: '', workingHours: '' },
+    footerText: '',
+    defaultSEO: { metaTitle: '', metaDescription: '' },
+    currency: { symbol: 'ر.ي', code: 'YER' },
+  });
+  const [loading, setLoading] = useState(true);
 
   // Cart State
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -124,16 +124,118 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [currentRoute, setCurrentRoute] = useState<string>('home');
   const [routeParams, setRouteParams] = useState<Record<string, string>>({});
 
-  // Listen for Sanity Store Updates (reactive when edited in /studeo)
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [
+        { data: catsData },
+        { data: prodsData },
+        { data: heroData },
+        { data: testData },
+        { data: settingsData }
+      ] = await Promise.all([
+        supabase.from('categories').select('*').order('display_order', { ascending: true }),
+        supabase.from('products').select('*'),
+        supabase.from('hero_slides').select('*').order('display_order', { ascending: true }),
+        supabase.from('testimonials').select('*').order('display_order', { ascending: true }),
+        supabase.from('site_settings').select('*').limit(1)
+      ]);
+
+      const mappedCategories = (catsData || []).map((c: any) => ({
+        _id: String(c.id),
+        name: c.name,
+        slug: { current: c.slug },
+        image: c.image,
+        description: c.description,
+        order: c.display_order,
+        active: c.active,
+      }));
+
+      const mappedProducts = (prodsData || []).map((p: any) => ({
+        _id: String(p.id),
+        name: p.name,
+        slug: { current: p.slug },
+        mainImage: p.main_image,
+        additionalImages: p.additional_images,
+        price: p.price,
+        oldPrice: p.old_price,
+        discountPercentage: p.discount_percentage,
+        shortDescription: p.short_description,
+        description: p.description,
+        category: { _ref: p.category_id ? String(p.category_id) : undefined },
+        colors: p.colors,
+        sizes: p.sizes,
+        sku: p.sku,
+        displayStockCount: p.display_stock_count,
+        isFeatured: p.is_featured,
+        isBestSeller: p.is_best_seller,
+        isNew: p.is_new,
+        isOnSale: p.is_on_sale,
+        rating: p.rating,
+        reviewsCount: p.reviews_count,
+        createdAt: p.created_at,
+        details: p.details,
+      }));
+
+      const mappedHeroSlides = (heroData || []).map((h: any) => ({
+        _id: h.id,
+        image: h.image,
+        title: h.title,
+        subtitle: h.subtitle,
+        description: h.description,
+        ctaText: h.cta_text,
+        ctaLink: h.cta_link,
+        badge: h.badge,
+        active: h.active,
+        order: h.display_order,
+      }));
+
+      const mappedTestimonials = (testData || []).map((t: any) => ({
+        _id: t.id,
+        name: t.name,
+        city: t.city,
+        text: t.text,
+        rating: t.rating,
+        image: t.image,
+        active: t.active,
+        order: t.display_order,
+        date: t.date,
+      }));
+
+      let mappedSettings = null;
+      if (settingsData && settingsData.length > 0) {
+        const s = settingsData[0];
+        mappedSettings = {
+          storeName: s.store_name,
+          storeNameEn: s.store_name_en,
+          tagline: s.tagline,
+          logo: s.logo,
+          whatsappNumber: s.whatsapp_number,
+          instagram: s.instagram,
+          tiktok: s.tiktok,
+          snapchat: s.snapchat,
+          storeDescription: s.store_description,
+          contactInformation: s.contact_information,
+          footerText: s.footer_text,
+          defaultSEO: s.default_seo,
+          currency: s.currency,
+        };
+      }
+
+      setCategories(mappedCategories);
+      setProducts(mappedProducts);
+      setHeroSlides(mappedHeroSlides.filter(h => h.active));
+      setTestimonials(mappedTestimonials.filter(t => t.active));
+      if (mappedSettings) setSiteSettings(mappedSettings);
+    } catch (e) {
+      console.error('Error fetching data from Supabase:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const unsubscribe = sanityStore.subscribe(() => {
-      setProducts([...sanityStore.getProducts()]);
-      setCategories([...sanityStore.getCategories()]);
-      setHeroSlides([...sanityStore.getHeroSlides()]);
-      setTestimonials([...sanityStore.getTestimonials()]);
-      setSiteSettings({ ...sanityStore.getSiteSettings() });
-    });
-    return () => unsubscribe();
+    fetchData();
   }, []);
 
   // Save Cart to LocalStorage
@@ -164,9 +266,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         params[key] = val;
       });
 
-      if (path === '/studio' || path === '/studio/' || path === '/studeo' || path === '/studeo/') {
-        setCurrentRoute('studio');
-        setRouteParams(params);
+      if (path.startsWith('/admin')) {
+        setCurrentRoute('admin');
+        const adminPath = path.replace('/admin', '');
+        setRouteParams({ adminPath: adminPath || '/', ...params });
       } else if (path.startsWith('/product/')) {
         const slug = path.replace('/product/', '').replace(/\/$/, '');
         setCurrentRoute('product-detail');
@@ -196,8 +299,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const navigateTo = (route: string, params: Record<string, string> = {}) => {
     let url = '/';
-    if (route === 'studeo' || route === 'studio') {
-      url = '/studio';
+    if (route === 'admin') {
+      url = `/admin${params.adminPath || ''}`;
     } else if (route === 'products') {
       const q = new URLSearchParams(params).toString();
       url = q ? `/products?${q}` : '/products';
@@ -324,73 +427,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const openQuickView = (product: Product) => setQuickViewProduct(product);
   const closeQuickView = () => setQuickViewProduct(null);
 
-  // Sanity Store Mutators (Real-time sync to LocalStorage & Subscribers)
-  const createProduct = (product: Product) => {
-    sanityStore.saveProduct(product);
-  };
-  const updateProduct = (id: string, updated: Partial<Product>) => {
-    const existing = products.find((p) => p._id === id);
-    if (existing) {
-      sanityStore.saveProduct({ ...existing, ...updated } as Product);
-    }
-  };
-  const deleteProduct = (id: string) => {
-    sanityStore.deleteProduct(id);
-  };
-
-  const createCategory = (category: Category) => {
-    sanityStore.saveCategory(category);
-  };
-  const updateCategory = (id: string, updated: Partial<Category>) => {
-    const existing = categories.find((c) => c._id === id);
-    if (existing) {
-      sanityStore.saveCategory({ ...existing, ...updated } as Category);
-    }
-  };
-  const deleteCategory = (id: string) => {
-    sanityStore.deleteCategory(id);
-  };
-
-  const createHeroSlide = (hero: HeroSlide) => {
-    sanityStore.saveHeroSlide(hero);
-  };
-  const updateHeroSlide = (id: string, updated: Partial<HeroSlide>) => {
-    const existing = heroSlides.find((h) => h._id === id);
-    if (existing) {
-      sanityStore.saveHeroSlide({ ...existing, ...updated } as HeroSlide);
-    }
-  };
-  const deleteHeroSlide = (id: string) => {
-    sanityStore.deleteHeroSlide(id);
-  };
-
-  const createTestimonial = (testimonial: Testimonial) => {
-    sanityStore.saveTestimonial(testimonial);
-  };
-  const updateTestimonial = (id: string, updated: Partial<Testimonial>) => {
-    const existing = testimonials.find((t) => t._id === id);
-    if (existing) {
-      sanityStore.saveTestimonial({ ...existing, ...updated } as Testimonial);
-    }
-  };
-  const deleteTestimonial = (id: string) => {
-    sanityStore.deleteTestimonial(id);
-  };
-
-  const updateSiteSettings = (updated: Partial<SiteSettings>) => {
-    sanityStore.saveSiteSettings({ ...siteSettings, ...updated });
-  };
-
   const refreshAllData = () => {
-    setProducts([...sanityStore.getProducts()]);
-    setCategories([...sanityStore.getCategories()]);
-    setHeroSlides([...sanityStore.getAllHeroSlides()]);
-    setTestimonials([...sanityStore.getAllTestimonials()]);
-    setSiteSettings({ ...sanityStore.getSiteSettings() });
-  };
-
-  const resetToDefaultData = () => {
-    sanityStore.resetToDefaults();
+    fetchData();
   };
 
   return (
@@ -400,7 +438,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         categories,
         heroSlides,
         testimonials,
-        siteSettings,
+        siteSettings: siteSettings as SiteSettings,
+        loading,
         cart,
         addToCart,
         removeFromCart,
@@ -425,21 +464,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         currentRoute,
         routeParams,
         navigateTo,
-        createProduct,
-        updateProduct,
-        deleteProduct,
-        createCategory,
-        updateCategory,
-        deleteCategory,
-        createHeroSlide,
-        updateHeroSlide,
-        deleteHeroSlide,
-        createTestimonial,
-        updateTestimonial,
-        deleteTestimonial,
-        updateSiteSettings,
         refreshAllData,
-        resetToDefaultData,
         toasts,
         showToast,
         removeToast,
