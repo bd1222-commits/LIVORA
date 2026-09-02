@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
-import { Search, ShoppingBag, Heart, Menu, X, Sparkles, Phone, ShieldCheck, ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { Search, ShoppingBag, Heart, Menu, X, Sparkles, Phone, ShieldCheck, ChevronDown, SlidersHorizontal, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const Header: React.FC = () => {
@@ -205,6 +205,16 @@ export const Header: React.FC = () => {
               <kbd className="bg-[#F6F0E8] px-1.5 py-0.5 rounded text-[10px] text-[#171717]/60 border border-[#171717]/10">
                 ⌘K
               </kbd>
+            </button>
+
+            {/* Admin Button */}
+            <button
+              onClick={() => navigateTo('admin')}
+              className="relative p-2 sm:p-2.5 rounded-full text-[#171717] hover:bg-[#C8A96B]/10 hover:text-[#C8A96B] transition-colors cursor-pointer"
+              aria-label="لوحة التحكم"
+              title="لوحة التحكم"
+            >
+              <User className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
             {/* Wishlist Button */}

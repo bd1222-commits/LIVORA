@@ -25,7 +25,7 @@ export const AboutPage: React.FC = () => {
         {/* Hero Visual Card */}
         <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-[#C8A96B]/30 h-[380px] sm:h-[450px]">
           <img
-            src="https://images.unsplash.com/photo-1512496015851-a90fb38ba796?q=80&w=1200&auto=format&fit=crop"
+            src="/livora-about-logo.jpg"
             alt="LIVORA Story"
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
