@@ -127,19 +127,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [
-        { data: catsData },
-        { data: prodsData },
-        { data: heroData },
-        { data: testData },
-        { data: settingsData }
-      ] = await Promise.all([
+      const responses = await Promise.all([
         supabase.from('categories').select('*').order('display_order', { ascending: true }),
         supabase.from('products').select('*'),
         supabase.from('hero_slides').select('*').order('display_order', { ascending: true }),
         supabase.from('testimonials').select('*').order('display_order', { ascending: true }),
         supabase.from('site_settings').select('*').limit(1)
       ]);
+      
+      responses.forEach(r => { if (r.error) console.error('Supabase fetch error:', r.error); });
+      
+      const [
+        { data: catsData },
+        { data: prodsData },
+        { data: heroData },
+        { data: testData },
+        { data: settingsData }
+      ] = responses;
 
       const mappedCategories = (catsData || []).map((c: any) => ({
         _id: String(c.id),
@@ -215,7 +219,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           tiktok: s.tiktok,
           snapchat: s.snapchat,
           storeDescription: s.description,
-          contactInformation: s.phone,
+          contactInformation: {
+            address: 'اليمن حضرموت ساه',
+            phone: s.phone,
+            email: s.email,
+            workingHours: ''
+          },
           footerText: s.footer_text,
           defaultSEO: s.default_seo,
           currency: s.currency,
