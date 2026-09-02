@@ -34,8 +34,14 @@ const AppContent: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F6F0E8] text-[#C8A96B]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C8A96B]"></div>
+      <div className="fixed inset-0 bg-[#F6F0E8] z-50 flex items-center justify-center">
+        <div className="relative w-24 h-24 sm:w-32 sm:h-32">
+          <img 
+            src="/livora-logo.jpg" 
+            alt="Loading..." 
+            className="w-full h-full object-cover rounded-full animate-pulse shadow-xl border-2 border-[#C8A96B]/30"
+          />
+        </div>
       </div>
     );
   }
