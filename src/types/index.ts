@@ -36,6 +36,7 @@ export interface Product {
   isBestSeller: boolean;
   isNew: boolean;
   isOnSale: boolean;
+  isGlobalBrand?: boolean;
   rating?: number;
   reviewsCount?: number;
   createdAt?: string;

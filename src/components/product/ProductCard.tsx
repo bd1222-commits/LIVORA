@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Product } from '../../types';
-import { Heart, ShoppingBag, Eye, Star, Flame, Sparkles, MessageCircle } from 'lucide-react';
+import { Heart, ShoppingBag, Eye, Star, Flame, Sparkles, MessageCircle, Globe } from 'lucide-react';
 import { motion } from 'motion/react';
 import { createProductWhatsAppMessage, formatPrice, openWhatsApp } from '../../utils/whatsapp';
 
@@ -81,6 +81,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
               <span className="bg-[#C8A96B] text-[#171717] text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
                 <Flame className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current" />
                 الأكثر طلباً
+              </span>
+            )}
+            {product.isGlobalBrand && (
+              <span className="bg-[#171717] text-[#DEC593] text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm border border-[#DEC593]/30 flex items-center gap-1">
+                <Globe className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#DEC593]" />
+                براند عالمي
               </span>
             )}
           </div>
@@ -188,6 +194,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
             <span className="bg-[#C8A96B] text-[#171717] text-[9px] sm:text-[10px] font-extrabold px-2 sm:px-2.5 py-0.5 rounded-full shadow-md flex items-center gap-0.5 sm:gap-1">
               <Flame className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current" />
               الأكثر طلباً
+            </span>
+          )}
+          {product.isGlobalBrand && (
+            <span className="bg-[#171717] text-[#DEC593] text-[9px] sm:text-[10px] font-extrabold px-2 sm:px-2.5 py-0.5 rounded-full shadow-md border border-[#DEC593]/30 flex items-center gap-0.5 sm:gap-1">
+              <Globe className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#DEC593]" />
+              براند عالمي
             </span>
           )}
         </div>

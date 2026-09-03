@@ -32,6 +32,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
     isBestSeller: false,
     isNew: false,
     isOnSale: false,
+    isGlobalBrand: false,
   });
 
   useEffect(() => {
@@ -55,6 +56,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
           isBestSeller: product.isBestSeller || false,
           isNew: product.isNew || false,
           isOnSale: product.isOnSale || false,
+          isGlobalBrand: product.isGlobalBrand || false,
         });
       }
     }
@@ -125,15 +127,22 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
         is_best_seller: formData.isBestSeller,
         is_new: formData.isNew,
         is_on_sale: formData.isOnSale,
+        is_global_brand: formData.isGlobalBrand,
       };
 
-      if (productId) {
-        const { error: updateError } = await supabase.from('products').update(dbData).eq('id', productId);
-        if (updateError) throw updateError;
-      } else {
-        const { error: insertError } = await supabase.from('products').insert([dbData]);
-        if (insertError) throw insertError;
+      let { error: saveError } = productId
+        ? await supabase.from('products').update(dbData).eq('id', productId)
+        : await supabase.from('products').insert([dbData]);
+
+      if (saveError && saveError.message?.includes('is_global_brand')) {
+        delete (dbData as any).is_global_brand;
+        const retryRes = productId
+          ? await supabase.from('products').update(dbData).eq('id', productId)
+          : await supabase.from('products').insert([dbData]);
+        saveError = retryRes.error;
       }
+
+      if (saveError) throw saveError;
 
       refreshAllData();
       setSuccess('تم حفظ المنتج بنجاح');
@@ -322,6 +331,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" name="isOnSale" checked={formData.isOnSale} onChange={handleChange} className="w-5 h-5 accent-[#C8A96B] bg-[#141414] border-white/10 rounded" />
                 <span className="text-sm font-bold text-stone-300">عليه عرض/تخفيض</span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" name="isGlobalBrand" checked={formData.isGlobalBrand} onChange={handleChange} className="w-5 h-5 accent-[#C8A96B] bg-[#141414] border-white/10 rounded" />
+                <span className="text-sm font-bold text-stone-300">براند عالمي</span>
               </label>
             </div>
             

@@ -44,3 +44,6 @@ USING (bucket_id = 'livora-storage' AND EXISTS (SELECT 1 FROM public.admins WHER
 CREATE POLICY "Admin Delete" ON storage.objects 
 FOR DELETE TO authenticated 
 USING (bucket_id = 'livora-storage' AND EXISTS (SELECT 1 FROM public.admins WHERE user_id = auth.uid()));
+
+-- 3. Add Global Brand Column to Products Table
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS is_global_brand BOOLEAN DEFAULT false;

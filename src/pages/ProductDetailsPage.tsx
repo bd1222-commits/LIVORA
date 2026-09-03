@@ -8,6 +8,7 @@ import {
   Sparkles,
   Check,
   Flame,
+  Globe,
   ShieldCheck,
   Truck,
   RotateCcw,
@@ -179,6 +180,12 @@ export const ProductDetailsPage: React.FC = () => {
                   {product.isNew && (
                     <span className="bg-[#171717] text-[#DEC593] text-[10px] sm:text-xs font-black px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full shadow-md border border-[#DEC593]/30">
                       جديد 2026
+                    </span>
+                  )}
+                  {product.isGlobalBrand && (
+                    <span className="bg-[#171717] text-[#DEC593] text-[10px] sm:text-xs font-black px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full shadow-md border border-[#DEC593]/30 flex items-center gap-1">
+                      <Globe className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#DEC593]" />
+                      براند عالمي
                     </span>
                   )}
                 </div>

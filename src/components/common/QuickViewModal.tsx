@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
-import { X, Heart, ShoppingBag, MessageCircle, Sparkles, Check, Flame, ShieldCheck } from 'lucide-react';
+import { X, Heart, ShoppingBag, MessageCircle, Sparkles, Check, Flame, ShieldCheck, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { createProductWhatsAppMessage, formatPrice, openWhatsApp } from '../../utils/whatsapp';
 
@@ -106,6 +106,12 @@ export const QuickViewModal: React.FC = () => {
                     <span className="bg-[#C8A96B] text-[#171717] text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md flex items-center gap-1">
                       <Flame className="w-3 h-3 fill-current" />
                       الأكثر طلباً
+                    </span>
+                  )}
+                  {quickViewProduct.isGlobalBrand && (
+                    <span className="bg-[#171717] text-[#DEC593] text-[11px] font-bold px-2.5 py-1 rounded-full shadow-md border border-[#DEC593]/30 flex items-center gap-1">
+                      <Globe className="w-3 h-3 text-[#DEC593]" />
+                      براند عالمي
                     </span>
                   )}
                 </div>

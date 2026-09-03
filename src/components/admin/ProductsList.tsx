@@ -108,6 +108,7 @@ export const ProductsList: React.FC = () => {
                       {product.isFeatured && <span className="inline-block px-2 py-0.5 bg-yellow-500/10 text-yellow-400 text-[10px] rounded mr-1">مميز</span>}
                       {product.isNew && <span className="inline-block px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[10px] rounded mr-1">جديد</span>}
                       {product.isOnSale && <span className="inline-block px-2 py-0.5 bg-red-500/10 text-red-400 text-[10px] rounded mr-1">تخفيض</span>}
+                      {product.isGlobalBrand && <span className="inline-block px-2 py-0.5 bg-purple-500/10 text-purple-400 text-[10px] rounded mr-1">براند عالمي</span>}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">

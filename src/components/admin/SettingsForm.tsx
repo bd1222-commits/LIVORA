@@ -52,31 +52,25 @@ export const SettingsForm: React.FC = () => {
     e.preventDefault();
     setLoading(true);
 
-    const dbData = {
+    const targetId = siteSettings?._id || '1';
+
+    const dbData: Record<string, any> = {
       store_name: formData.storeName,
-      store_name_en: formData.storeNameEn,
-      tagline: formData.tagline,
-      whatsapp_number: formData.whatsappNumber,
+      whatsapp: formData.whatsappNumber,
       instagram: formData.instagram,
       tiktok: formData.tiktok,
-      snapchat: formData.snapchat,
-      store_description: formData.storeDescription,
-      footer_text: formData.footerText,
-      contact_information: {
-        address: formData.address,
-        email: formData.email,
-        phone: formData.phone,
-        workingHours: formData.workingHours,
-      }
+      description: formData.storeDescription,
+      phone: formData.phone,
+      email: formData.email,
     };
 
     try {
-      const { error } = await supabase.from('site_settings').update(dbData).eq('id', 'main_settings');
+      const { error } = await supabase.from('site_settings').update(dbData).eq('id', targetId);
       if (error) throw error;
       showToast('تم الحفظ', 'تم تحديث إعدادات المتجر بنجاح', 'success');
       refreshAllData();
     } catch (err: any) {
-      showToast('خطأ', 'فشل حفظ الإعدادات: ' + err.message, 'info');
+      showToast('خطأ', 'فشل حفظ الإعدادات: ' + (err.message || 'خطأ غير معروف'), 'info');
     } finally {
       setLoading(false);
     }
