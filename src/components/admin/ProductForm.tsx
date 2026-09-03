@@ -56,7 +56,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
           isBestSeller: product.isBestSeller || false,
           isNew: product.isNew || false,
           isOnSale: product.isOnSale || false,
-          isGlobalBrand: product.isGlobalBrand || false,
+          isGlobalBrand: product.isGlobalBrand || Boolean(product.details?.isGlobalBrand) || Boolean(product.details?.is_global_brand) || false,
         });
       }
     }
@@ -110,6 +110,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
     setSuccess('');
 
     try {
+      const productObj = productId ? products.find(p => p._id === productId) : null;
+      const existingDetails = (typeof productObj?.details === 'object' && productObj?.details !== null) ? productObj.details : {};
+
       const dbData = {
         name: formData.name,
         slug: formData.slug,
@@ -128,6 +131,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
         is_new: formData.isNew,
         is_on_sale: formData.isOnSale,
         is_global_brand: formData.isGlobalBrand,
+        details: {
+          ...existingDetails,
+          isGlobalBrand: formData.isGlobalBrand,
+          is_global_brand: formData.isGlobalBrand,
+        }
       };
 
       let { error: saveError } = productId

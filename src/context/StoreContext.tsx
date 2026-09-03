@@ -176,7 +176,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         isBestSeller: p.is_best_seller,
         isNew: p.is_new,
         isOnSale: p.is_on_sale,
-        isGlobalBrand: p.is_global_brand || false,
+        isGlobalBrand: Boolean(p.is_global_brand || p.details?.isGlobalBrand || p.details?.is_global_brand || false),
         rating: p.rating,
         reviewsCount: p.reviews_count,
         createdAt: p.created_at,
