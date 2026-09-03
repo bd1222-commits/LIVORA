@@ -87,7 +87,7 @@ export const QuickViewModal: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2">
             {/* Gallery Column */}
             <div className="p-6 bg-[#F6F0E8] flex flex-col justify-between border-b md:border-b-0 md:border-l border-[#171717]/10">
-              <div className="relative aspect-square rounded-xl overflow-hidden bg-stone-200 shadow-inner">
+              <div className="relative aspect-[1080/1442] rounded-xl overflow-hidden bg-stone-200 shadow-inner">
                 <img
                   src={images[selectedImageIndex] || quickViewProduct.mainImage}
                   alt={quickViewProduct.name}

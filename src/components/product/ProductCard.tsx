@@ -62,7 +62,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
         className="group relative bg-[#FAF7F2] rounded-2xl p-3 sm:p-4 border border-[#171717]/10 hover:border-[#C8A96B]/50 transition-all duration-300 shadow-xs hover:shadow-lg flex flex-col sm:flex-row gap-3.5 sm:gap-5 cursor-pointer"
       >
         {/* Image */}
-        <div className="relative w-full sm:w-48 aspect-square rounded-xl overflow-hidden bg-stone-200 shrink-0">
+        <div className="relative w-full sm:w-48 aspect-[1080/1442] rounded-xl overflow-hidden bg-stone-200 shrink-0">
           <img
             src={product.mainImage}
             alt={product.name}
@@ -163,7 +163,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
       className="group relative bg-[#FAF7F2] rounded-2xl border border-[#171717]/10 hover:border-[#C8A96B]/60 transition-all duration-300 shadow-xs hover:shadow-xl overflow-hidden flex flex-col justify-between cursor-pointer"
     >
       {/* Top Image Container */}
-      <div className="relative aspect-square w-full bg-stone-100 overflow-hidden">
+      <div className="relative aspect-[1080/1442] w-full bg-stone-100 overflow-hidden">
         {/* Main/Hover Image */}
         <img
           src={isHovered && secondaryImage ? secondaryImage : product.mainImage}

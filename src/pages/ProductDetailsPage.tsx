@@ -155,7 +155,7 @@ export const ProductDetailsPage: React.FC = () => {
             {/* Gallery Column (5 cols) */}
             <div className="lg:col-span-6 space-y-3 sm:space-y-4">
               {/* Main Active Image with Zoom effect */}
-              <div className="relative aspect-square rounded-xl sm:rounded-2xl overflow-hidden bg-[#FAF7F2] border border-[#171717]/10 shadow-inner group">
+              <div className="relative aspect-[1080/1442] rounded-xl sm:rounded-2xl overflow-hidden bg-[#FAF7F2] border border-[#171717]/10 shadow-inner group">
                 <img
                   src={images[selectedImageIndex] || product.mainImage}
                   alt={product.name}
@@ -200,7 +200,7 @@ export const ProductDetailsPage: React.FC = () => {
                     <button
                       key={index}
                       onClick={() => setSelectedImageIndex(index)}
-                      className={`aspect-square rounded-lg sm:rounded-xl overflow-hidden border-2 transition-all ${
+                      className={`aspect-[1080/1442] rounded-lg sm:rounded-xl overflow-hidden border-2 transition-all ${
                         selectedImageIndex === index
                           ? 'border-[#C8A96B] shadow-md ring-2 ring-[#C8A96B]/20'
                           : 'border-transparent opacity-65 hover:opacity-100'

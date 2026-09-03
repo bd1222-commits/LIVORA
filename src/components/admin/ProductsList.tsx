@@ -86,7 +86,7 @@ export const ProductsList: React.FC = () => {
                 return (
                   <tr key={product._id} className="hover:bg-white/5 transition-colors">
                     <td className="px-4 py-3 flex items-center gap-3">
-                      <img src={product.mainImage} alt={product.name} className="w-10 h-10 rounded-lg object-cover bg-white/5" />
+                      <img src={product.mainImage} alt={product.name} className="w-10 aspect-[1080/1442] rounded-lg object-cover bg-white/5" />
                       <div>
                         <p className="font-bold text-white line-clamp-1">{product.name}</p>
                         <p className="text-[10px] text-stone-500 font-mono" dir="ltr">{product.slug.current}</p>

@@ -7,9 +7,69 @@ interface ImageUploaderProps {
   onChange: (url: string) => void;
   bucket?: string;
   label?: string;
+  isProductImage?: boolean;
 }
 
-export const ImageUploader: React.FC<ImageUploaderProps> = ({ value, onChange, bucket = 'livora-storage', label = 'صورة' }) => {
+const processProductImage = (file: File): Promise<File> => {
+  return new Promise((resolve) => {
+    if (!file.type.startsWith('image/')) return resolve(file);
+
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement('canvas');
+      const targetWidth = 1080;
+      const targetHeight = 1442;
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return resolve(file);
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, targetWidth, targetHeight);
+
+      const imgRatio = img.width / img.height;
+      const targetRatio = targetWidth / targetHeight;
+
+      let drawWidth = targetWidth;
+      let drawHeight = targetHeight;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      if (imgRatio > targetRatio) {
+        drawWidth = targetHeight * imgRatio;
+        drawHeight = targetHeight;
+        offsetX = (targetWidth - drawWidth) / 2;
+      } else {
+        drawWidth = targetWidth;
+        drawHeight = targetWidth / imgRatio;
+        offsetY = (targetHeight - drawHeight) / 2;
+      }
+
+      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return resolve(file);
+          const processedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          });
+          resolve(processedFile);
+        },
+        'image/jpeg',
+        0.92
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    };
+    img.src = url;
+  });
+};
+
+export const ImageUploader: React.FC<ImageUploaderProps> = ({ value, onChange, bucket = 'livora-storage', label = 'صورة', isProductImage = false }) => {
   const [uploading, setUploading] = useState(false);
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -20,7 +80,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ value, onChange, b
         throw new Error('يجب اختيار صورة');
       }
 
-      const file = event.target.files[0];
+      let file = event.target.files[0];
+      if (isProductImage) {
+        file = await processProductImage(file);
+      }
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;

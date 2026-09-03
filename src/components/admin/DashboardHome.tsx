@@ -24,18 +24,38 @@ export const DashboardHome: React.FC = () => {
         const startOf7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
         const startOf30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-        // Since we don't have Count API easily without multiple requests or RPC, we'll do simple queries.
-        // For a very large site, RPC is better, but this works for Livora.
-        const { count: totalCount } = await supabase.from('visits').select('*', { count: 'exact', head: true });
-        const { count: todayCount } = await supabase.from('visits').select('*', { count: 'exact', head: true }).gte('visited_at', startOfToday);
-        const { count: last7DaysCount } = await supabase.from('visits').select('*', { count: 'exact', head: true }).gte('visited_at', startOf7Days);
-        const { count: last30DaysCount } = await supabase.from('visits').select('*', { count: 'exact', head: true }).gte('visited_at', startOf30Days);
+        let totalC = 0;
+        let todayC = 0;
+        let last7C = 0;
+        let last30C = 0;
+
+        // Fetch total count
+        const { count: totalCount } = await supabase.from('visits').select('id', { count: 'exact', head: true });
+        if (totalCount !== null && totalCount !== undefined) {
+          totalC = totalCount;
+        }
+
+        // Determine date column (visited_at vs created_at)
+        let dateCol = 'visited_at';
+        const { error: colCheckErr } = await supabase.from('visits').select('visited_at', { head: true }).limit(1);
+        if (colCheckErr) {
+          dateCol = 'created_at';
+        }
+
+        const { count: todayCount } = await supabase.from('visits').select('id', { count: 'exact', head: true }).gte(dateCol, startOfToday);
+        if (todayCount !== null && todayCount !== undefined) todayC = todayCount;
+
+        const { count: last7DaysCount } = await supabase.from('visits').select('id', { count: 'exact', head: true }).gte(dateCol, startOf7Days);
+        if (last7DaysCount !== null && last7DaysCount !== undefined) last7C = last7DaysCount;
+
+        const { count: last30DaysCount } = await supabase.from('visits').select('id', { count: 'exact', head: true }).gte(dateCol, startOf30Days);
+        if (last30DaysCount !== null && last30DaysCount !== undefined) last30C = last30DaysCount;
 
         setVisitsStats({
-          total: totalCount || 0,
-          today: todayCount || 0,
-          last7Days: last7DaysCount || 0,
-          last30Days: last30DaysCount || 0
+          total: totalC,
+          today: todayC,
+          last7Days: last7C,
+          last30Days: last30C
         });
       } catch (e) {
         console.error('Error fetching visits', e);

@@ -10,9 +10,10 @@ interface ProductFormProps {
 }
 
 export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
-  const { navigateTo, products, categories, refreshAllData } = useStore();
+  const { navigateTo, products, categories, refreshAllData, showToast } = useStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -104,12 +105,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
-      if (formData.oldPrice > 0 && formData.price > formData.oldPrice) {
-        throw new Error('السعر الحالي لا يمكن أن يكون أعلى من السعر القديم');
-      }
-
       const dbData = {
         name: formData.name,
         slug: formData.slug,
@@ -138,7 +136,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
       }
 
       refreshAllData();
-      navigateTo('admin/products');
+      setSuccess('تم حفظ المنتج بنجاح');
+      showToast('تم الحفظ بنجاح', 'تم حفظ المنتج بنجاح', 'success');
     } catch (err: any) {
       setError(err.message || 'حدث خطأ أثناء حفظ المنتج');
     } finally {
@@ -150,7 +149,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
     <div className="bg-[#1C1C1C] rounded-2xl border border-white/5 p-6">
       <div className="flex items-center gap-4 mb-8">
         <button
-          onClick={() => navigateTo('admin/products')}
+          onClick={() => navigateTo('admin', { adminPath: '/products' })}
           className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white hover:bg-[#C8A96B] hover:text-[#171717] transition-all"
         >
           <ArrowRight className="w-5 h-5" />
@@ -159,6 +158,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
           {productId ? 'تعديل منتج' : 'إضافة منتج جديد'}
         </h2>
       </div>
+
+      {success && (
+        <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-3 rounded-xl mb-6 font-bold flex items-center gap-2">
+          <span>✓</span>
+          <span>{success}</span>
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl mb-6">
@@ -322,14 +328,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
             <h3 className="text-lg font-bold text-white border-b border-white/10 pb-2 mt-6">صور المنتج</h3>
             <div className="space-y-6">
               <ImageUploader 
-                label="الصورة الرئيسية *" 
+                label="الصورة الرئيسية (المقاس المعتمد 1080 × 1442) *" 
                 value={formData.mainImage} 
                 onChange={handleMainImageChange} 
+                isProductImage={true}
               />
               <MultiImageUploader 
-                label="صور إضافية" 
+                label="صور إضافية (المقاس المعتمد 1080 × 1442)" 
                 values={formData.additionalImages} 
                 onChange={handleAdditionalImagesChange} 
+                isProductImage={true}
               />
             </div>
           </div>
