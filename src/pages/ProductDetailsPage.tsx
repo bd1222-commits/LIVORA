@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { createProductWhatsAppMessage, formatPrice, openWhatsApp } from '../utils/whatsapp';
 import { motion } from 'motion/react';
+import { ProductImage } from '../components/common/ProductImage';
 
 export const ProductDetailsPage: React.FC = () => {
   const {
@@ -157,21 +158,16 @@ export const ProductDetailsPage: React.FC = () => {
             <div className="lg:col-span-6 space-y-3 sm:space-y-4">
               {/* Main Active Image with Zoom effect */}
               <div className="relative aspect-[1080/1442] rounded-xl sm:rounded-2xl overflow-hidden bg-[#FAF7F2] border border-[#171717]/10 shadow-inner group">
-                <img
+                <ProductImage
                   src={images[selectedImageIndex] || product.mainImage}
                   alt={product.name}
-                  className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-700 cursor-zoom-in"
-                  referrerPolicy="no-referrer"
+                  transform={
+                    product.imageTransforms?.[images[selectedImageIndex]] ||
+                    (selectedImageIndex === 0 ? product.imageTransform : undefined)
+                  }
+                  showWatermark={true}
+                  watermarkPosition="details"
                 />
-
-                {/* LIVORA Watermark Logo */}
-                <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 z-10 pointer-events-none">
-                  <img
-                    src="/livora-watermark.png"
-                    alt="LIVORA"
-                    className="h-3 sm:h-4 w-auto opacity-80 filter drop-shadow-sm"
-                  />
-                </div>
 
                 {/* Badges Stack */}
                 <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex flex-col gap-1.5 sm:gap-2 z-10">
@@ -222,11 +218,14 @@ export const ProductDetailsPage: React.FC = () => {
                           : 'border-transparent opacity-65 hover:opacity-100'
                       }`}
                     >
-                      <img
+                      <ProductImage
                         src={img}
                         alt={`thumb-${index}`}
-                        className="w-full h-full object-contain p-1 bg-[#FAF7F2]"
-                        referrerPolicy="no-referrer"
+                        transform={
+                          product.imageTransforms?.[img] ||
+                          (index === 0 ? product.imageTransform : undefined)
+                        }
+                        containerClassName="bg-[#FAF7F2]"
                       />
                     </button>
                   ))}

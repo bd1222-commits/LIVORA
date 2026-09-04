@@ -3,6 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { X, Heart, ShoppingBag, MessageCircle, Sparkles, Check, Flame, ShieldCheck, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { createProductWhatsAppMessage, formatPrice, openWhatsApp } from '../../utils/whatsapp';
+import { ProductImage } from './ProductImage';
 
 export const QuickViewModal: React.FC = () => {
   const {
@@ -88,21 +89,16 @@ export const QuickViewModal: React.FC = () => {
             {/* Gallery Column */}
             <div className="p-6 bg-[#F6F0E8] flex flex-col justify-between border-b md:border-b-0 md:border-l border-[#171717]/10">
               <div className="relative aspect-[1080/1442] rounded-xl overflow-hidden bg-[#FAF7F2] shadow-inner">
-                <img
+                <ProductImage
                   src={images[selectedImageIndex] || quickViewProduct.mainImage}
                   alt={quickViewProduct.name}
-                  className="w-full h-full object-contain p-2 transition-all duration-300"
-                  referrerPolicy="no-referrer"
+                  transform={
+                    quickViewProduct.imageTransforms?.[images[selectedImageIndex]] ||
+                    (selectedImageIndex === 0 ? quickViewProduct.imageTransform : undefined)
+                  }
+                  showWatermark={true}
+                  watermarkPosition="details"
                 />
-
-                {/* LIVORA Watermark Logo */}
-                <div className="absolute bottom-3 left-3 z-10 pointer-events-none">
-                  <img
-                    src="/livora-watermark.png"
-                    alt="LIVORA"
-                    className="h-3 w-auto opacity-80 filter drop-shadow-sm"
-                  />
-                </div>
 
                 {/* Badges */}
                 <div className="absolute top-3 right-3 flex flex-col gap-1.5">
@@ -139,11 +135,14 @@ export const QuickViewModal: React.FC = () => {
                           : 'border-transparent opacity-70 hover:opacity-100'
                       }`}
                     >
-                      <img
+                      <ProductImage
                         src={img}
                         alt="thumbnail"
-                        className="w-full h-full object-contain p-1 bg-[#FAF7F2]"
-                        referrerPolicy="no-referrer"
+                        transform={
+                          quickViewProduct.imageTransforms?.[img] ||
+                          (idx === 0 ? quickViewProduct.imageTransform : undefined)
+                        }
+                        containerClassName="bg-[#FAF7F2]"
                       />
                     </button>
                   ))}

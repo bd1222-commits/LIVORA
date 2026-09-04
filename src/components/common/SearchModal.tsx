@@ -3,6 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { Search, X, ShoppingBag, ArrowRight, Sparkles, Tag } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { formatPrice } from '../../utils/whatsapp';
+import { ProductImage } from './ProductImage';
 
 export const SearchModal: React.FC = () => {
   const {
@@ -150,12 +151,13 @@ export const SearchModal: React.FC = () => {
                       }}
                       className="flex items-center gap-3 p-2 rounded-xl bg-white border border-stone-100 hover:border-[#C8A96B] cursor-pointer group transition-all"
                     >
-                      <img
-                        src={prod.mainImage}
-                        alt={prod.name}
-                        className="w-12 h-12 rounded-lg object-contain p-1 bg-[#FAF7F2]"
-                        referrerPolicy="no-referrer"
-                      />
+                      <div className="w-12 rounded-lg overflow-hidden shrink-0 bg-[#FAF7F2]">
+                        <ProductImage
+                          src={prod.mainImage}
+                          alt={prod.name}
+                          transform={prod.imageTransform}
+                        />
+                      </div>
                       <div className="overflow-hidden">
                         <h5 className="text-xs font-bold text-[#171717] truncate group-hover:text-[#C8A96B]">
                           {prod.name}
@@ -198,12 +200,13 @@ export const SearchModal: React.FC = () => {
                       }}
                       className="flex items-center gap-3.5 flex-1 cursor-pointer"
                     >
-                      <img
-                        src={product.mainImage}
-                        alt={product.name}
-                        className="w-14 h-14 rounded-lg object-contain p-1 bg-[#FAF7F2]"
-                        referrerPolicy="no-referrer"
-                      />
+                      <div className="w-14 rounded-lg overflow-hidden shrink-0 bg-[#FAF7F2]">
+                        <ProductImage
+                          src={product.mainImage}
+                          alt={product.name}
+                          transform={product.imageTransform}
+                        />
+                      </div>
                       <div>
                         <span className="text-[10px] font-bold text-[#C8A96B] uppercase">
                           {product.category?.name}

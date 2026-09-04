@@ -1,3 +1,9 @@
+export interface ImageTransform {
+  zoom: number;
+  positionX: number;
+  positionY: number;
+}
+
 export interface ProductVariant {
   id: string;
   name: string;
@@ -15,6 +21,8 @@ export interface Product {
   };
   mainImage: string;
   additionalImages?: string[];
+  imageTransform?: ImageTransform;
+  imageTransforms?: Record<string, ImageTransform>;
   price: number;
   oldPrice?: number;
   discountPercentage?: number;
@@ -49,6 +57,8 @@ export interface Product {
     careInstructions?: string;
     warranty?: string;
     features?: string[];
+    imageTransform?: ImageTransform;
+    imageTransforms?: Record<string, ImageTransform>;
     [key: string]: any;
   };
 }

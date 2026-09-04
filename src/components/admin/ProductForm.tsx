@@ -4,6 +4,8 @@ import { supabase } from '../../lib/supabase/client';
 import { ArrowRight, Save, Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
 import { ImageUploader } from './ImageUploader';
 import { MultiImageUploader } from './MultiImageUploader';
+import { ImageTransformEditor } from './ImageTransformEditor';
+import { ImageTransform } from '../../types';
 
 interface ProductFormProps {
   productId?: string;
@@ -28,6 +30,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
     categoryId: '',
     mainImage: '',
     additionalImages: [] as string[],
+    imageTransform: { zoom: 1, positionX: 0, positionY: 0 } as ImageTransform,
+    imageTransforms: {} as Record<string, ImageTransform>,
     isFeatured: false,
     isBestSeller: false,
     isNew: false,
@@ -54,6 +58,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
           categoryId: product.category?._ref || '',
           mainImage: product.mainImage,
           additionalImages: product.additionalImages || [],
+          imageTransform: product.imageTransform || product.details?.imageTransform || { zoom: 1, positionX: 0, positionY: 0 },
+          imageTransforms: product.imageTransforms || product.details?.imageTransforms || {},
           isFeatured: product.isFeatured || false,
           isBestSeller: product.isBestSeller || false,
           isNew: product.isNew || false,
@@ -163,6 +169,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
           is_visible: formData.isVisible,
           isVisible: formData.isVisible,
           features: cleanFeatures,
+          imageTransform: formData.imageTransform,
+          imageTransforms: {
+            ...formData.imageTransforms,
+            [formData.mainImage]: formData.imageTransform,
+          },
         }
       };
 
@@ -430,12 +441,54 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
                 onChange={handleMainImageChange} 
                 isProductImage={true}
               />
+
+              {formData.mainImage && (
+                <ImageTransformEditor
+                  imageUrl={formData.mainImage}
+                  title="تأطير وضبط الصورة الرئيسية (1080×1442)"
+                  transform={formData.imageTransform}
+                  onChange={(newT) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      imageTransform: newT,
+                      imageTransforms: {
+                        ...prev.imageTransforms,
+                        [prev.mainImage]: newT,
+                      }
+                    }));
+                  }}
+                />
+              )}
+
               <MultiImageUploader 
                 label="صور إضافية (المقاس المعتمد 1080 × 1442)" 
                 values={formData.additionalImages} 
                 onChange={handleAdditionalImagesChange} 
                 isProductImage={true}
               />
+
+              {formData.additionalImages.length > 0 && (
+                <div className="space-y-4 pt-4 border-t border-white/10">
+                  <h4 className="text-sm font-bold text-[#C8A96B]">تأطير وضبط الصور الإضافية (1080×1442)</h4>
+                  {formData.additionalImages.map((imgUrl, idx) => (
+                    <ImageTransformEditor
+                      key={idx}
+                      imageUrl={imgUrl}
+                      title={`تأطير الصورة الإضافية رقم ${idx + 1}`}
+                      transform={formData.imageTransforms[imgUrl] || { zoom: 1, positionX: 0, positionY: 0 }}
+                      onChange={(newT) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          imageTransforms: {
+                            ...prev.imageTransforms,
+                            [imgUrl]: newT,
+                          }
+                        }));
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

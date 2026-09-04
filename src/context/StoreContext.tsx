@@ -187,6 +187,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           : typeof p.details?.features === 'string'
           ? p.details.features.split('\n').map((s: string) => s.trim()).filter(Boolean)
           : [],
+        imageTransform: p.image_transform || p.details?.imageTransform,
+        imageTransforms: p.image_transforms || p.details?.imageTransforms || {},
         details: p.details,
       }));
 

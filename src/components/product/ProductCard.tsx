@@ -4,6 +4,7 @@ import { Product } from '../../types';
 import { Heart, ShoppingBag, Eye, Star, Flame, Sparkles, MessageCircle, Globe } from 'lucide-react';
 import { motion } from 'motion/react';
 import { createProductWhatsAppMessage, formatPrice, openWhatsApp } from '../../utils/whatsapp';
+import { ProductImage } from '../common/ProductImage';
 
 interface ProductCardProps {
   product: Product;
@@ -63,11 +64,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
       >
         {/* Image */}
         <div className="relative w-full sm:w-48 aspect-[1080/1442] rounded-xl overflow-hidden bg-[#FAF7F2] shrink-0">
-          <img
+          <ProductImage
             src={product.mainImage}
             alt={product.name}
-            className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-500"
-            referrerPolicy="no-referrer"
+            transform={product.imageTransform}
+            className="group-hover:scale-105 transition-transform duration-500"
           />
 
           {/* Badges */}
@@ -174,11 +175,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
       {/* Top Image Container */}
       <div className="relative aspect-[1080/1442] w-full bg-[#FAF7F2] overflow-hidden">
         {/* Main/Hover Image */}
-        <img
+        <ProductImage
           src={isHovered && secondaryImage ? secondaryImage : product.mainImage}
           alt={product.name}
-          className="w-full h-full object-contain p-1 transition-all duration-700 group-hover:scale-105"
-          referrerPolicy="no-referrer"
+          transform={
+            isHovered && secondaryImage && product.imageTransforms?.[secondaryImage]
+              ? product.imageTransforms[secondaryImage]
+              : product.imageTransform
+          }
+          className="transition-all duration-700 group-hover:scale-105"
         />
 
         {/* Badges Stack */}

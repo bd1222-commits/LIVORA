@@ -3,6 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { X, Trash2, Plus, Minus, ShoppingBag, MessageCircle, ArrowLeft, Sparkles, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { createCartWhatsAppMessage, formatPrice, openWhatsApp } from '../../utils/whatsapp';
+import { ProductImage } from './ProductImage';
 
 export const CartDrawer: React.FC = () => {
   const {
@@ -110,13 +111,13 @@ export const CartDrawer: React.FC = () => {
                         setIsCartOpen(false);
                         navigateTo('product-detail', { slug: item.product.slug?.current || item.product._id });
                       }}
-                      className="w-20 h-24 rounded-lg bg-stone-100 overflow-hidden shrink-0 cursor-pointer relative"
+                      className="w-20 rounded-lg overflow-hidden shrink-0 cursor-pointer relative bg-stone-100"
                     >
-                      <img
+                      <ProductImage
                         src={item.product.mainImage}
                         alt={item.product.name}
-                        className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300"
-                        referrerPolicy="no-referrer"
+                        transform={item.product.imageTransform}
+                        className="group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
 
