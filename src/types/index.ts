@@ -37,14 +37,19 @@ export interface Product {
   isNew: boolean;
   isOnSale: boolean;
   isGlobalBrand?: boolean;
+  isVisible?: boolean;
+  is_visible?: boolean;
   rating?: number;
   reviewsCount?: number;
   createdAt?: string;
+  features?: string[];
   details?: {
     material?: string;
     origin?: string;
     careInstructions?: string;
     warranty?: string;
+    features?: string[];
+    [key: string]: any;
   };
 }
 

@@ -160,9 +160,18 @@ export const ProductDetailsPage: React.FC = () => {
                 <img
                   src={images[selectedImageIndex] || product.mainImage}
                   alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 cursor-zoom-in"
+                  className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-700 cursor-zoom-in"
                   referrerPolicy="no-referrer"
                 />
+
+                {/* LIVORA Watermark Logo */}
+                <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 z-10 pointer-events-none">
+                  <img
+                    src="/livora-watermark.png"
+                    alt="LIVORA"
+                    className="h-3 sm:h-4 w-auto opacity-80 filter drop-shadow-sm"
+                  />
+                </div>
 
                 {/* Badges Stack */}
                 <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex flex-col gap-1.5 sm:gap-2 z-10">
@@ -216,7 +225,7 @@ export const ProductDetailsPage: React.FC = () => {
                       <img
                         src={img}
                         alt={`thumb-${index}`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain p-1 bg-[#FAF7F2]"
                         referrerPolicy="no-referrer"
                       />
                     </button>
@@ -425,41 +434,39 @@ export const ProductDetailsPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Specs / Details */}
-                {product.details && (
+                {/* Product Features ("مميزات المنتج") */}
+                {((product.features && product.features.length > 0) || (product.details?.features && product.details.features.length > 0) || product.details?.material || product.details?.origin) && (
                   <div className="border border-stone-200 rounded-xl overflow-hidden">
                     <button
                       onClick={() => setActiveAccordion(activeAccordion === 'specs' ? null : 'specs')}
                       className="w-full text-right p-3 sm:p-3.5 bg-[#FAF7F2] text-xs font-bold text-[#171717] flex items-center justify-between"
                     >
-                      <span>المواصفات وخامات التصنيع</span>
+                      <span>مميزات المنتج</span>
                       <span className="text-stone-400">{activeAccordion === 'specs' ? '−' : '+'}</span>
                     </button>
                     {activeAccordion === 'specs' && (
                       <div className="p-3.5 sm:p-4 text-xs text-stone-600 leading-relaxed bg-white border-t border-stone-100 space-y-2">
-                        {product.details.material && (
-                          <div className="flex justify-between border-b border-stone-50 pb-1">
-                            <span className="font-bold text-[#171717]">الخامة:</span>
-                            <span>{product.details.material}</span>
+                        {((product.features && product.features.length > 0) ? product.features : (product.details?.features && product.details.features.length > 0) ? product.details.features : []).map((feature, idx) => (
+                          <div key={idx} className="flex items-start gap-2 border-b border-stone-50 pb-1.5 last:border-0 last:pb-0">
+                            <span className="text-[#C8A96B] font-bold shrink-0">•</span>
+                            <span className="text-[#171717] font-medium">{feature}</span>
                           </div>
-                        )}
-                        {product.details.origin && (
-                          <div className="flex justify-between border-b border-stone-50 pb-1">
-                            <span className="font-bold text-[#171717]">بلد المنشأ والتصميم:</span>
-                            <span>{product.details.origin}</span>
-                          </div>
-                        )}
-                        {product.details.careInstructions && (
-                          <div className="flex justify-between border-b border-stone-50 pb-1">
-                            <span className="font-bold text-[#171717]">تعليمات العناية:</span>
-                            <span>{product.details.careInstructions}</span>
-                          </div>
-                        )}
-                        {product.details.warranty && (
-                          <div className="flex justify-between">
-                            <span className="font-bold text-[#171717]">الضمان:</span>
-                            <span>{product.details.warranty}</span>
-                          </div>
+                        ))}
+                        {(!product.features || product.features.length === 0) && (!product.details?.features || product.details.features.length === 0) && (
+                          <>
+                            {product.details?.material && (
+                              <div className="flex justify-between border-b border-stone-50 pb-1">
+                                <span className="font-bold text-[#171717]">الخامة:</span>
+                                <span>{product.details.material}</span>
+                              </div>
+                            )}
+                            {product.details?.origin && (
+                              <div className="flex justify-between border-b border-stone-50 pb-1">
+                                <span className="font-bold text-[#171717]">بلد المنشأ والتصميم:</span>
+                                <span>{product.details.origin}</span>
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     )}

@@ -25,18 +25,18 @@ export const CategoriesList: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold font-['Cinzel'] text-[#C8A96B]">إدارة التصنيفات</h2>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        <h2 className="text-xl sm:text-2xl font-bold font-['Cinzel'] text-[#C8A96B]">إدارة التصنيفات</h2>
         <button
           onClick={() => navigateTo('admin', { adminPath: '/categories/new' })}
-          className="bg-[#C8A96B] text-[#171717] px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#DEC593] transition-colors"
+          className="bg-[#C8A96B] text-[#171717] px-4 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#DEC593] transition-colors text-sm"
         >
           <Plus className="w-5 h-5" />
           <span>إضافة تصنيف</span>
         </button>
       </div>
 
-      <div className="bg-[#1F1F1F] rounded-2xl p-6 border border-white/10 shadow-lg">
+      <div className="bg-[#1F1F1F] rounded-2xl p-4 sm:p-6 border border-white/10 shadow-lg">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-right">
             <thead className="text-xs text-stone-400 bg-white/5 border-b border-white/10">

@@ -29,24 +29,33 @@ export const DashboardHome: React.FC = () => {
         let last7C = 0;
         let last30C = 0;
 
-        // Try querying visits table
-        const { count: totalCount, error: visitsErr } = await supabase.from('visits').select('id', { count: 'exact', head: true });
-        if (!visitsErr && totalCount !== null && totalCount !== undefined && totalCount > 0) {
-          totalC = totalCount;
-          let dateCol = 'visited_at';
-          const { error: colCheckErr } = await supabase.from('visits').select('visited_at', { head: true }).limit(1);
-          if (colCheckErr) dateCol = 'created_at';
+        // Fetch visits from table to calculate Unique Visitors (distinct session_id)
+        const { data: visitsData, error: visitsErr } = await supabase
+          .from('visits')
+          .select('session_id, visited_at');
 
-          const { count: todayCount } = await supabase.from('visits').select('id', { count: 'exact', head: true }).gte(dateCol, startOfToday);
-          if (todayCount !== null && todayCount !== undefined) todayC = todayCount;
+        if (!visitsErr && visitsData && visitsData.length > 0) {
+          const allUnique = new Set<string>();
+          const todayUnique = new Set<string>();
+          const last7DaysUnique = new Set<string>();
+          const last30DaysUnique = new Set<string>();
 
-          const { count: last7DaysCount } = await supabase.from('visits').select('id', { count: 'exact', head: true }).gte(dateCol, startOf7Days);
-          if (last7DaysCount !== null && last7DaysCount !== undefined) last7C = last7DaysCount;
+          visitsData.forEach((row: any) => {
+            const sid = row.session_id || 'anon';
+            const dateStr = row.visited_at || row.created_at || '';
+            
+            allUnique.add(sid);
+            if (dateStr >= startOfToday) todayUnique.add(sid);
+            if (dateStr >= startOf7Days) last7DaysUnique.add(sid);
+            if (dateStr >= startOf30Days) last30DaysUnique.add(sid);
+          });
 
-          const { count: last30DaysCount } = await supabase.from('visits').select('id', { count: 'exact', head: true }).gte(dateCol, startOf30Days);
-          if (last30DaysCount !== null && last30DaysCount !== undefined) last30C = last30DaysCount;
+          totalC = allUnique.size;
+          todayC = todayUnique.size;
+          last7C = last7DaysUnique.size;
+          last30C = last30DaysUnique.size;
         } else {
-          // Read from site_settings fallback
+          // Read from site_settings fallback (NO mock/fake numbers)
           const { data: settingsData } = await supabase.from('site_settings').select('shipping_info').limit(1);
           if (settingsData && settingsData.length > 0 && settingsData[0].shipping_info) {
             let stats: any = {};
@@ -55,15 +64,10 @@ export const DashboardHome: React.FC = () => {
             } catch {
               stats = {};
             }
-            totalC = stats.totalVisits || 128;
-            todayC = stats.todayVisits || 14;
-            last7C = stats.last7Days || 52;
-            last30C = stats.last30Days || 118;
-          } else {
-            totalC = 128;
-            todayC = 14;
-            last7C = 52;
-            last30C = 118;
+            totalC = stats.totalVisits || stats.totalUniqueVisitors || 0;
+            todayC = stats.todayVisits || stats.todayUniqueVisitors || 0;
+            last7C = stats.last7Days || 0;
+            last30C = stats.last30Days || 0;
           }
         }
 
@@ -86,93 +90,94 @@ export const DashboardHome: React.FC = () => {
       <h2 className="text-2xl font-bold font-['Cinzel'] text-[#C8A96B] mb-6">نظرة عامة على المتجر</h2>
 
       {/* Analytics Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-[#1C1C1C] border border-blue-500/20 rounded-2xl p-6 relative overflow-hidden">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="bg-[#1C1C1C] border border-blue-500/20 rounded-2xl p-4 sm:p-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-bl-full -z-10" />
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-stone-400 font-bold">زوار اليوم</h3>
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
-              <Activity className="w-5 h-5" />
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-stone-400 font-bold text-xs sm:text-sm">زوار اليوم</h3>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+              <Activity className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <p className="text-4xl font-bold text-white font-['Cinzel']">{visitsStats.today}</p>
+          <p className="text-2xl sm:text-4xl font-bold text-white font-['Cinzel']">{visitsStats.today}</p>
         </div>
         
-        <div className="bg-[#1C1C1C] border border-green-500/20 rounded-2xl p-6 relative overflow-hidden">
+        <div className="bg-[#1C1C1C] border border-green-500/20 rounded-2xl p-4 sm:p-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/5 rounded-bl-full -z-10" />
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-stone-400 font-bold">آخر 7 أيام</h3>
-            <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-400">
-              <TrendingUp className="w-5 h-5" />
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-stone-400 font-bold text-xs sm:text-sm">آخر 7 أيام</h3>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-400">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <p className="text-4xl font-bold text-white font-['Cinzel']">{visitsStats.last7Days}</p>
+          <p className="text-2xl sm:text-4xl font-bold text-white font-['Cinzel']">{visitsStats.last7Days}</p>
         </div>
 
-        <div className="bg-[#1C1C1C] border border-purple-500/20 rounded-2xl p-6 relative overflow-hidden">
+        <div className="bg-[#1C1C1C] border border-purple-500/20 rounded-2xl p-4 sm:p-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-bl-full -z-10" />
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-stone-400 font-bold">آخر 30 يوماً</h3>
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
-              <Users className="w-5 h-5" />
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-stone-400 font-bold text-xs sm:text-sm">آخر 30 يوماً</h3>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <p className="text-4xl font-bold text-white font-['Cinzel']">{visitsStats.last30Days}</p>
+          <p className="text-2xl sm:text-4xl font-bold text-white font-['Cinzel']">{visitsStats.last30Days}</p>
         </div>
 
-        <div className="bg-[#1C1C1C] border border-[#C8A96B]/20 rounded-2xl p-6 relative overflow-hidden">
+        <div className="bg-[#1C1C1C] border border-[#C8A96B]/20 rounded-2xl p-4 sm:p-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-[#C8A96B]/5 rounded-bl-full -z-10" />
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-stone-400 font-bold">إجمالي الزيارات</h3>
-            <div className="w-10 h-10 rounded-xl bg-[#C8A96B]/10 flex items-center justify-center text-[#C8A96B]">
-              <Users className="w-5 h-5" />
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-stone-400 font-bold text-xs sm:text-sm">إجمالي الزيارات</h3>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#C8A96B]/10 flex items-center justify-center text-[#C8A96B]">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <p className="text-4xl font-bold text-white font-['Cinzel']">{visitsStats.total}</p>
+          <p className="text-2xl sm:text-4xl font-bold text-white font-['Cinzel']">{visitsStats.total}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-[#1C1C1C] border border-white/5 rounded-2xl p-6 relative overflow-hidden">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-stone-400 font-bold">إجمالي المنتجات</h3>
-            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-stone-300">
-              <Package className="w-5 h-5" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="bg-[#1C1C1C] border border-white/5 rounded-2xl p-4 sm:p-6 relative overflow-hidden">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-stone-400 font-bold text-xs sm:text-sm">إجمالي المنتجات</h3>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/5 flex items-center justify-center text-stone-300">
+              <Package className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <p className="text-4xl font-bold text-white font-['Cinzel']">{products.length}</p>
+          <p className="text-2xl sm:text-4xl font-bold text-white font-['Cinzel']">{products.length}</p>
         </div>
 
-        <div className="bg-[#1C1C1C] border border-emerald-500/20 rounded-2xl p-6 relative overflow-hidden">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-emerald-400 font-bold">منتجات متاحة</h3>
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-              <Package className="w-5 h-5" />
+        <div className="bg-[#1C1C1C] border border-emerald-500/20 rounded-2xl p-4 sm:p-6 relative overflow-hidden">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-emerald-400 font-bold text-xs sm:text-sm">منتجات متاحة</h3>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+              <Package className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <p className="text-4xl font-bold text-emerald-400 font-['Cinzel']">{availableProducts.length}</p>
+          <p className="text-2xl sm:text-4xl font-bold text-emerald-400 font-['Cinzel']">{availableProducts.length}</p>
         </div>
 
-        <div className="bg-[#1C1C1C] border border-orange-500/20 rounded-2xl p-6 relative overflow-hidden">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-orange-400 font-bold">مخزون منخفض</h3>
-            <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400">
-              <AlertTriangle className="w-5 h-5" />
+        <div className="bg-[#1C1C1C] border border-orange-500/20 rounded-2xl p-4 sm:p-6 relative overflow-hidden">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-orange-400 font-bold text-xs sm:text-sm">مخزون منخفض</h3>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400">
+              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <p className="text-4xl font-bold text-orange-400 font-['Cinzel']">{lowStockProducts.length}</p>
+          <p className="text-2xl sm:text-4xl font-bold text-orange-400 font-['Cinzel']">{lowStockProducts.length}</p>
         </div>
 
-        <div className="bg-[#1C1C1C] border border-red-500/20 rounded-2xl p-6 relative overflow-hidden">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-red-400 font-bold">نفدت الكمية</h3>
-            <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400">
-              <AlertTriangle className="w-5 h-5" />
+        <div className="bg-[#1C1C1C] border border-red-500/20 rounded-2xl p-4 sm:p-6 relative overflow-hidden">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-red-400 font-bold text-xs sm:text-sm">نفدت الكمية</h3>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-400">
+              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </div>
-          <p className="text-4xl font-bold text-red-400 font-['Cinzel']">{outOfStockProducts.length}</p>
+          <p className="text-2xl sm:text-4xl font-bold text-red-400 font-['Cinzel']">{outOfStockProducts.length}</p>
         </div>
       </div>
     </div>
   );
 };
+

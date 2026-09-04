@@ -62,11 +62,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
         className="group relative bg-[#FAF7F2] rounded-2xl p-3 sm:p-4 border border-[#171717]/10 hover:border-[#C8A96B]/50 transition-all duration-300 shadow-xs hover:shadow-lg flex flex-col sm:flex-row gap-3.5 sm:gap-5 cursor-pointer"
       >
         {/* Image */}
-        <div className="relative w-full sm:w-48 aspect-[1080/1442] rounded-xl overflow-hidden bg-stone-200 shrink-0">
+        <div className="relative w-full sm:w-48 aspect-[1080/1442] rounded-xl overflow-hidden bg-[#FAF7F2] shrink-0">
           <img
             src={product.mainImage}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-500"
             referrerPolicy="no-referrer"
           />
 
@@ -96,9 +96,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
         <div className="flex-1 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] sm:text-[11px] font-bold text-[#C8A96B] uppercase tracking-wider">
-                {product.category?.name}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] sm:text-[11px] font-bold text-[#C8A96B] uppercase tracking-wider">
+                  {product.category?.name || 'مجموعة ليفورا'}
+                </span>
+                <img src="/livora-watermark.png" alt="LIVORA" className="h-2.5 sm:h-3 w-auto opacity-75 shrink-0" />
+              </div>
               <button
                 onClick={handleToggleWishlist}
                 className={`p-1.5 sm:p-2 rounded-full transition-colors ${
@@ -169,12 +172,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
       className="group relative bg-[#FAF7F2] rounded-2xl border border-[#171717]/10 hover:border-[#C8A96B]/60 transition-all duration-300 shadow-xs hover:shadow-xl overflow-hidden flex flex-col justify-between cursor-pointer"
     >
       {/* Top Image Container */}
-      <div className="relative aspect-[1080/1442] w-full bg-stone-100 overflow-hidden">
+      <div className="relative aspect-[1080/1442] w-full bg-[#FAF7F2] overflow-hidden">
         {/* Main/Hover Image */}
         <img
           src={isHovered && secondaryImage ? secondaryImage : product.mainImage}
           alt={product.name}
-          className="w-full h-full object-cover transition-all duration-700 group-hover:scale-108"
+          className="w-full h-full object-contain p-1 transition-all duration-700 group-hover:scale-105"
           referrerPolicy="no-referrer"
         />
 
@@ -219,6 +222,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
           <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${inWishlist ? 'fill-current' : ''}`} />
         </button>
 
+        {/* LIVORA Logo directly below Wishlist Button */}
+        <div className="absolute top-10 left-2 sm:top-13 sm:left-3 z-10 pointer-events-none">
+          <img
+            src="/livora-watermark.png"
+            alt="LIVORA"
+            className="h-2.5 sm:h-3.5 w-auto opacity-85 filter drop-shadow-xs"
+          />
+        </div>
+
         {/* Hover Action Overlay (Visible on desktop hover) */}
         <div className="absolute inset-x-2 bottom-2 sm:inset-x-3 sm:bottom-3 z-10 hidden sm:flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
           <button
@@ -244,7 +256,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
       <div className="p-2.5 sm:p-4 flex-1 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-[#C8A96B] font-bold mb-0.5 sm:mb-1">
-            <span className="truncate">{product.category?.name || 'مجموعة ليفورا'}</span>
+            <div className="flex items-center gap-1.5 truncate">
+              <span className="truncate">{product.category?.name || 'مجموعة ليفورا'}</span>
+              <img src="/livora-watermark.png" alt="LIVORA" className="h-2 sm:h-2.5 w-auto opacity-70 shrink-0" />
+            </div>
             {product.rating && (
               <div className="flex items-center gap-0.5 sm:gap-1 text-stone-600 font-medium shrink-0">
                 <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-500 fill-amber-500" />

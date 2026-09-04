@@ -115,7 +115,7 @@ export const CartDrawer: React.FC = () => {
                       <img
                         src={item.product.mainImage}
                         alt={item.product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-300"
                         referrerPolicy="no-referrer"
                       />
                     </div>

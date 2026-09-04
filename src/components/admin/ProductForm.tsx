@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { supabase } from '../../lib/supabase/client';
-import { ArrowRight, Save, Image as ImageIcon } from 'lucide-react';
+import { ArrowRight, Save, Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
 import { ImageUploader } from './ImageUploader';
 import { MultiImageUploader } from './MultiImageUploader';
 
@@ -33,6 +33,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
     isNew: false,
     isOnSale: false,
     isGlobalBrand: false,
+    isVisible: true,
+    features: [] as string[],
   });
 
   useEffect(() => {
@@ -57,6 +59,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
           isNew: product.isNew || false,
           isOnSale: product.isOnSale || false,
           isGlobalBrand: product.isGlobalBrand || Boolean(product.details?.isGlobalBrand) || Boolean(product.details?.is_global_brand) || false,
+          isVisible: product.isVisible !== false,
+          features: product.features || product.details?.features || [],
         });
       }
     }
@@ -103,6 +107,25 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
     setFormData((prev) => ({ ...prev, additionalImages: urls }));
   };
 
+  const handleAddFeature = () => {
+    setFormData((prev) => ({ ...prev, features: [...prev.features, ''] }));
+  };
+
+  const handleFeatureChange = (index: number, value: string) => {
+    setFormData((prev) => {
+      const updated = [...prev.features];
+      updated[index] = value;
+      return { ...prev, features: updated };
+    });
+  };
+
+  const handleRemoveFeature = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      features: prev.features.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -112,6 +135,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
     try {
       const productObj = productId ? products.find(p => p._id === productId) : null;
       const existingDetails = (typeof productObj?.details === 'object' && productObj?.details !== null) ? productObj.details : {};
+      const cleanFeatures = formData.features.map(f => f.trim()).filter(Boolean);
 
       const dbData = {
         name: formData.name,
@@ -131,10 +155,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
         is_new: formData.isNew,
         is_on_sale: formData.isOnSale,
         is_global_brand: formData.isGlobalBrand,
+        is_visible: formData.isVisible,
         details: {
           ...existingDetails,
           isGlobalBrand: formData.isGlobalBrand,
           is_global_brand: formData.isGlobalBrand,
+          is_visible: formData.isVisible,
+          isVisible: formData.isVisible,
+          features: cleanFeatures,
         }
       };
 
@@ -142,8 +170,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
         ? await supabase.from('products').update(dbData).eq('id', productId)
         : await supabase.from('products').insert([dbData]);
 
-      if (saveError && saveError.message?.includes('is_global_brand')) {
-        delete (dbData as any).is_global_brand;
+      if (saveError && (saveError.message?.includes('is_global_brand') || saveError.message?.includes('is_visible'))) {
+        if (saveError.message?.includes('is_global_brand')) delete (dbData as any).is_global_brand;
+        if (saveError.message?.includes('is_visible')) delete (dbData as any).is_visible;
         const retryRes = productId
           ? await supabase.from('products').update(dbData).eq('id', productId)
           : await supabase.from('products').insert([dbData]);
@@ -267,6 +296,49 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
                 className="w-full bg-[#141414] border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-[#C8A96B]"
               />
             </div>
+
+            {/* Product Features ("مميزات المنتج") */}
+            <div className="pt-4 border-t border-white/10">
+              <div className="flex items-center justify-between mb-3">
+                <label className="block text-sm font-bold text-[#C8A96B]">مميزات المنتج</label>
+                <button
+                  type="button"
+                  onClick={handleAddFeature}
+                  className="px-3 py-1.5 rounded-lg bg-[#C8A96B]/15 hover:bg-[#C8A96B] text-[#C8A96B] hover:text-[#171717] text-xs font-bold transition-colors flex items-center gap-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>إضافة ميزة</span>
+                </button>
+              </div>
+
+              {formData.features.length === 0 ? (
+                <p className="text-xs text-stone-500 italic bg-[#141414] p-3 rounded-xl border border-white/5">
+                  لا توجد مميزات مضافة لهذا المنتج بعد. اضغط على "إضافة ميزة" لإضافة ميزة جديدة.
+                </p>
+              ) : (
+                <div className="space-y-2.5">
+                  {formData.features.map((feature, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={feature}
+                        onChange={(e) => handleFeatureChange(idx, e.target.value)}
+                        placeholder={`الميزة رقم ${idx + 1} (مثال: خامة عالية الجودة)`}
+                        className="flex-1 bg-[#141414] border border-white/10 rounded-xl py-2 px-3 text-sm text-white focus:outline-none focus:border-[#C8A96B]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFeature(idx)}
+                        className="p-2 rounded-xl text-stone-400 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0"
+                        title="حذف الميزة"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -343,6 +415,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" name="isGlobalBrand" checked={formData.isGlobalBrand} onChange={handleChange} className="w-5 h-5 accent-[#C8A96B] bg-[#141414] border-white/10 rounded" />
                 <span className="text-sm font-bold text-stone-300">براند عالمي</span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer col-span-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                <input type="checkbox" name="isVisible" checked={formData.isVisible} onChange={handleChange} className="w-5 h-5 accent-emerald-500 bg-[#141414] border-white/10 rounded" />
+                <span className="text-sm font-bold text-emerald-400">إظهار المنتج في المتجر (الظهور للعملاء)</span>
               </label>
             </div>
             

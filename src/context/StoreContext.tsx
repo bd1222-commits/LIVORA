@@ -175,11 +175,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         isFeatured: p.is_featured,
         isBestSeller: p.is_best_seller,
         isNew: p.is_new,
-        isOnSale: p.is_on_sale,
         isGlobalBrand: Boolean(p.is_global_brand || p.details?.isGlobalBrand || p.details?.is_global_brand || false),
+        isVisible: p.is_visible !== false && p.is_visible !== 'false' && p.details?.is_visible !== false && p.details?.isVisible !== false,
         rating: p.rating,
         reviewsCount: p.reviews_count,
         createdAt: p.created_at,
+        features: Array.isArray(p.features)
+          ? p.features
+          : Array.isArray(p.details?.features)
+          ? p.details.features
+          : typeof p.details?.features === 'string'
+          ? p.details.features.split('\n').map((s: string) => s.trim()).filter(Boolean)
+          : [],
         details: p.details,
       }));
 
@@ -446,10 +453,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     fetchData();
   };
 
+  const visibleProducts = React.useMemo(() => {
+    return products.filter((p) => p.isVisible !== false);
+  }, [products]);
+
+  const displayedProducts = currentRoute === 'admin' ? products : visibleProducts;
+
   return (
     <StoreContext.Provider
       value={{
-        products,
+        products: displayedProducts,
         categories,
         heroSlides,
         testimonials,

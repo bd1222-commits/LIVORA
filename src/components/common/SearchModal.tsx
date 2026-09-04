@@ -153,7 +153,7 @@ export const SearchModal: React.FC = () => {
                       <img
                         src={prod.mainImage}
                         alt={prod.name}
-                        className="w-12 h-12 rounded-lg object-cover"
+                        className="w-12 h-12 rounded-lg object-contain p-1 bg-[#FAF7F2]"
                         referrerPolicy="no-referrer"
                       />
                       <div className="overflow-hidden">
@@ -201,7 +201,7 @@ export const SearchModal: React.FC = () => {
                       <img
                         src={product.mainImage}
                         alt={product.name}
-                        className="w-14 h-14 rounded-lg object-cover"
+                        className="w-14 h-14 rounded-lg object-contain p-1 bg-[#FAF7F2]"
                         referrerPolicy="no-referrer"
                       />
                       <div>

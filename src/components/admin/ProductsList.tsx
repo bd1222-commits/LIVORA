@@ -15,6 +15,35 @@ export const ProductsList: React.FC = () => {
     return matchesSearch && matchesCategory;
   });
 
+  const handleToggleVisibility = async (product: any) => {
+    const nextVal = !(product.isVisible !== false);
+    try {
+      const existingDetails = (typeof product.details === 'object' && product.details !== null) ? product.details : {};
+      const dbData = {
+        is_visible: nextVal,
+        details: {
+          ...existingDetails,
+          is_visible: nextVal,
+          isVisible: nextVal,
+        }
+      };
+
+      let { error: saveError } = await supabase.from('products').update(dbData).eq('id', product._id);
+      if (saveError && saveError.message?.includes('is_visible')) {
+        delete (dbData as any).is_visible;
+        const retryRes = await supabase.from('products').update(dbData).eq('id', product._id);
+        saveError = retryRes.error;
+      }
+
+      if (saveError) throw saveError;
+
+      showToast(nextVal ? 'تم إظهار المنتج في المتجر' : 'تم إخفاء المنتج من المتجر', product.name, nextVal ? 'success' : 'info');
+      refreshAllData();
+    } catch (err: any) {
+      showToast('خطأ', err.message || 'فشل تغيير حالة الظهور', 'info');
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!window.confirm('هل أنت متأكد من حذف هذا المنتج؟ لا يمكن التراجع عن هذا الإجراء.')) return;
     
@@ -33,18 +62,18 @@ export const ProductsList: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold font-['Cinzel'] text-[#C8A96B]">إدارة المنتجات</h2>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        <h2 className="text-xl sm:text-2xl font-bold font-['Cinzel'] text-[#C8A96B]">إدارة المنتجات</h2>
         <button
           onClick={() => navigateTo('admin', { adminPath: '/products/new' })}
-          className="bg-[#C8A96B] text-[#171717] px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-[#DEC593] transition-colors"
+          className="bg-[#C8A96B] text-[#171717] px-4 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#DEC593] transition-colors shadow-md text-sm"
         >
           <Plus className="w-5 h-5" />
           <span>إضافة منتج جديد</span>
         </button>
       </div>
 
-      <div className="bg-[#1F1F1F] rounded-2xl p-6 border border-white/10 shadow-lg">
+      <div className="bg-[#1F1F1F] rounded-2xl p-4 sm:p-6 border border-white/10 shadow-lg">
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="relative flex-1">
             <input
@@ -76,6 +105,7 @@ export const ProductsList: React.FC = () => {
                 <th className="px-4 py-3 font-bold">السعر</th>
                 <th className="px-4 py-3 font-bold">التصنيف</th>
                 <th className="px-4 py-3 font-bold">المخزون</th>
+                <th className="px-4 py-3 font-bold">الظهور في المتجر</th>
                 <th className="px-4 py-3 font-bold">الحالة</th>
                 <th className="px-4 py-3 font-bold">الإجراءات</th>
               </tr>
@@ -83,10 +113,11 @@ export const ProductsList: React.FC = () => {
             <tbody className="divide-y divide-white/5">
               {filteredProducts.map((product) => {
                 const catName = categories.find(c => c._id === product.category?._ref)?.name || 'غير محدد';
+                const isVis = product.isVisible !== false;
                 return (
                   <tr key={product._id} className="hover:bg-white/5 transition-colors">
                     <td className="px-4 py-3 flex items-center gap-3">
-                      <img src={product.mainImage} alt={product.name} className="w-10 aspect-[1080/1442] rounded-lg object-cover bg-white/5" />
+                      <img src={product.mainImage} alt={product.name} className="w-10 aspect-[1080/1442] rounded-lg object-contain bg-[#FAF7F2] p-0.5" />
                       <div>
                         <p className="font-bold text-white line-clamp-1">{product.name}</p>
                         <p className="text-[10px] text-stone-500 font-mono" dir="ltr">{product.slug.current}</p>
@@ -103,6 +134,20 @@ export const ProductsList: React.FC = () => {
                       }`}>
                         {product.displayStockCount > 0 ? `${product.displayStockCount} متوفر` : 'نفذ الكمية'}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => handleToggleVisibility(product)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                          isVis
+                            ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25'
+                            : 'bg-stone-500/20 text-stone-400 border border-stone-500/30 hover:bg-stone-500/30'
+                        }`}
+                        title="انقر لتغيير إظهار أو إخفاء المنتج من المتجر"
+                      >
+                        <span className={`w-2 h-2 rounded-full ${isVis ? 'bg-emerald-400 animate-pulse' : 'bg-stone-500'}`} />
+                        <span>{isVis ? 'ظاهر [ ON ]' : 'مخفي [ OFF ]'}</span>
+                      </button>
                     </td>
                     <td className="px-4 py-3 space-y-1">
                       {product.isFeatured && <span className="inline-block px-2 py-0.5 bg-yellow-500/10 text-yellow-400 text-[10px] rounded mr-1">مميز</span>}
