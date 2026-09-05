@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { supabase } from '../lib/supabase/client';
 import { CartItem, Category, HeroSlide, Product, SiteSettings, Testimonial } from '../types';
 import confetti from 'canvas-confetti';
@@ -459,48 +459,87 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return products.filter((p) => p.isVisible !== false);
   }, [products]);
 
-  const displayedProducts = currentRoute === 'admin' ? products : visibleProducts;
+  const displayedProducts = useMemo(
+    () => (currentRoute === 'admin' ? products : visibleProducts),
+    [currentRoute, products, visibleProducts]
+  );
+
+  const contextValue = useMemo(
+    () => ({
+      products: displayedProducts,
+      categories,
+      heroSlides,
+      testimonials,
+      siteSettings: siteSettings as SiteSettings,
+      loading,
+      cart,
+      addToCart,
+      removeFromCart,
+      updateCartQuantity,
+      clearCart,
+      cartSubtotal,
+      totalCartItems,
+      isCartOpen,
+      setIsCartOpen,
+      wishlistIds,
+      wishlistProducts,
+      toggleWishlist,
+      isInWishlist,
+      totalWishlistItems,
+      quickViewProduct,
+      openQuickView,
+      closeQuickView,
+      searchQuery,
+      setSearchQuery,
+      isSearchOpen,
+      setIsSearchOpen,
+      currentRoute,
+      routeParams,
+      navigateTo,
+      refreshAllData,
+      toasts,
+      showToast,
+      removeToast,
+      triggerConfetti,
+    }),
+    [
+      displayedProducts,
+      categories,
+      heroSlides,
+      testimonials,
+      siteSettings,
+      loading,
+      cart,
+      addToCart,
+      removeFromCart,
+      updateCartQuantity,
+      clearCart,
+      cartSubtotal,
+      totalCartItems,
+      isCartOpen,
+      wishlistIds,
+      wishlistProducts,
+      toggleWishlist,
+      isInWishlist,
+      totalWishlistItems,
+      quickViewProduct,
+      openQuickView,
+      closeQuickView,
+      searchQuery,
+      isSearchOpen,
+      currentRoute,
+      routeParams,
+      navigateTo,
+      refreshAllData,
+      toasts,
+      showToast,
+      removeToast,
+      triggerConfetti,
+    ]
+  );
 
   return (
-    <StoreContext.Provider
-      value={{
-        products: displayedProducts,
-        categories,
-        heroSlides,
-        testimonials,
-        siteSettings: siteSettings as SiteSettings,
-        loading,
-        cart,
-        addToCart,
-        removeFromCart,
-        updateCartQuantity,
-        clearCart,
-        cartSubtotal,
-        totalCartItems,
-        isCartOpen,
-        setIsCartOpen,
-        wishlistIds,
-        wishlistProducts,
-        toggleWishlist,
-        isInWishlist,
-        totalWishlistItems,
-        quickViewProduct,
-        openQuickView,
-        closeQuickView,
-        searchQuery,
-        setSearchQuery,
-        isSearchOpen,
-        setIsSearchOpen,
-        currentRoute,
-        routeParams,
-        navigateTo,
-        refreshAllData,
-        toasts,
-        showToast,
-        removeToast,
-        triggerConfetti,
-      }}
-    >
+    <StoreContext.Provider value={contextValue}>
       {children}
     </StoreContext.Provider>
   );

@@ -161,6 +161,7 @@ export const ProductDetailsPage: React.FC = () => {
                 <ProductImage
                   src={images[selectedImageIndex] || product.mainImage}
                   alt={product.name}
+                  loading="eager"
                   transform={
                     product.imageTransforms?.[images[selectedImageIndex]] ||
                     (selectedImageIndex === 0 ? product.imageTransform : undefined)
