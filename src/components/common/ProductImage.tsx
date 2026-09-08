@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { ImageTransform } from '../../types';
 
 interface ProductImageProps {
@@ -10,10 +10,11 @@ interface ProductImageProps {
   showWatermark?: boolean;
   watermarkPosition?: 'card' | 'details';
   aspectRatio?: string;
+  loading?: 'lazy' | 'eager';
   onClick?: () => void;
 }
 
-export const ProductImage: React.FC<ProductImageProps> = ({
+export const ProductImage: React.FC<ProductImageProps> = memo(({
   src,
   alt,
   transform,
@@ -22,6 +23,7 @@ export const ProductImage: React.FC<ProductImageProps> = ({
   showWatermark = false,
   watermarkPosition = 'card',
   aspectRatio = '1080 / 1442',
+  loading = 'lazy',
   onClick,
 }) => {
   const zoom = transform?.zoom ?? 1;
@@ -37,10 +39,14 @@ export const ProductImage: React.FC<ProductImageProps> = ({
       <img
         src={src}
         alt={alt}
+        loading={loading}
+        decoding="async"
+        referrerPolicy="no-referrer"
         className={`w-full h-full object-contain pointer-events-none transition-transform duration-75 ${className}`}
         style={{
           transform: `scale(${zoom}) translate(${x}%, ${y}%)`,
           transformOrigin: 'center center',
+          willChange: 'transform',
         }}
       />
 
@@ -55,6 +61,8 @@ export const ProductImage: React.FC<ProductImageProps> = ({
           <img
             src="/livora-watermark.png"
             alt="LIVORA"
+            loading="lazy"
+            decoding="async"
             className={
               watermarkPosition === 'details'
                 ? 'h-6 sm:h-8 w-auto opacity-75 object-contain'
@@ -65,4 +73,6 @@ export const ProductImage: React.FC<ProductImageProps> = ({
       )}
     </div>
   );
-};
+});
+
+ProductImage.displayName = 'ProductImage';

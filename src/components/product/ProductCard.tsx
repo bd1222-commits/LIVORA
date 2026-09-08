@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Product } from '../../types';
 import { Heart, ShoppingBag, Eye, Star, Flame, Sparkles, MessageCircle, Globe } from 'lucide-react';
@@ -11,7 +11,7 @@ interface ProductCardProps {
   layout?: 'grid' | 'list';
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) => {
+export const ProductCard: React.FC<ProductCardProps> = memo(({ product, layout = 'grid' }) => {
   const {
     addToCart,
     toggleWishlist,
@@ -24,37 +24,35 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
   } = useStore();
 
   const [isHovered, setIsHovered] = useState(false);
-  const [imgSrc, setImgSrc] = useState(product.mainImage);
-
   const inWishlist = isInWishlist(product._id);
   const secondaryImage = product.additionalImages?.[0];
 
-  const handleWhatsAppQuickOrder = (e: React.MouseEvent) => {
+  const handleWhatsAppQuickOrder = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     const message = createProductWhatsAppMessage(product);
     triggerConfetti();
     showToast('جارٍ فتح الواتساب لطلب المنتج...', undefined, 'gold');
     openWhatsApp(siteSettings?.whatsappNumber || '', message);
-  };
+  }, [product, siteSettings?.whatsappNumber, triggerConfetti, showToast]);
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     addToCart(product, 1);
-  };
+  }, [product, addToCart]);
 
-  const handleToggleWishlist = (e: React.MouseEvent) => {
+  const handleToggleWishlist = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     toggleWishlist(product);
-  };
+  }, [product, toggleWishlist]);
 
-  const handleOpenQuickView = (e: React.MouseEvent) => {
+  const handleOpenQuickView = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     openQuickView(product);
-  };
+  }, [product, openQuickView]);
 
-  const handleNavigateDetails = () => {
+  const handleNavigateDetails = useCallback(() => {
     navigateTo('product-detail', { slug: product.slug?.current || product._id });
-  };
+  }, [product, navigateTo]);
 
   if (layout === 'list') {
     return (
@@ -325,4 +323,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
       </div>
     </motion.div>
   );
-};
+});
+
+ProductCard.displayName = 'ProductCard';
