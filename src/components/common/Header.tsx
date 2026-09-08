@@ -180,15 +180,6 @@ export const Header: React.FC = () => {
               </kbd>
             </button>
 
-            {/* Admin Button */}
-            <button
-              onClick={() => navigateTo('admin')}
-              className="relative p-2 sm:p-2.5 rounded-full text-[#171717] hover:bg-[#C8A96B]/10 hover:text-[#C8A96B] transition-colors cursor-pointer"
-              aria-label="لوحة التحكم"
-              title="لوحة التحكم"
-            >
-              <User className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
 
             {/* Wishlist Button */}
             <button
