@@ -19,7 +19,6 @@ import { ProductDetailsPage } from './pages/ProductDetailsPage';
 import { WishlistPage } from './pages/WishlistPage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
-import { motion, AnimatePresence } from 'motion/react';
 import { AuthProvider } from './context/AuthContext';
 import { AdminApp } from './components/admin/AdminApp';
 import { AnalyticsTracker } from './components/common/AnalyticsTracker';
@@ -29,7 +28,7 @@ const AppContent: React.FC = () => {
 
   // Scroll to top on route change
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
   }, [currentRoute]);
 
   if (loading) {
@@ -61,25 +60,16 @@ const AppContent: React.FC = () => {
       {/* 1. Global Navigation Header */}
       <Header />
 
-      {/* 2. Main Dynamic Page Content with Animated Transition */}
+      {/* 2. Main Dynamic Page Content */}
       <main className="flex-1 w-full">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentRoute}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
-            className="w-full"
-          >
-            {currentRoute === 'home' && <HomePage />}
-            {currentRoute === 'products' && <ProductsPage />}
-            {currentRoute === 'product-detail' && <ProductDetailsPage />}
-            {currentRoute === 'wishlist' && <WishlistPage />}
-            {currentRoute === 'about' && <AboutPage />}
-            {currentRoute === 'contact' && <ContactPage />}
-          </motion.div>
-        </AnimatePresence>
+        <div key={currentRoute} className="w-full">
+          {currentRoute === 'home' && <HomePage />}
+          {currentRoute === 'products' && <ProductsPage />}
+          {currentRoute === 'product-detail' && <ProductDetailsPage />}
+          {currentRoute === 'wishlist' && <WishlistPage />}
+          {currentRoute === 'about' && <AboutPage />}
+          {currentRoute === 'contact' && <ContactPage />}
+        </div>
       </main>
 
       {/* 3. Luxury Onyx & Gold Footer */}
