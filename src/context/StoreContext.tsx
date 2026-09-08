@@ -273,62 +273,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       ];
 
       const mappedHeroSlides = (heroData && heroData.length > 0)
-        ? heroData.map((h: any, idx: number) => {
-            if (idx === 0 || h.id === 'hero-1') {
-              return {
-                _id: h.id || 'hero-1',
-                image: '/hero-banner-1.jpg',
-                title: 'لمسة فخامة في كل تفصيل',
-                subtitle: h.subtitle || 'تشكيلة ليفورا الجديدة لعام 2026',
-                description: 'اكتشفي تشكيلتنا المختارة بعناية من التفاصيل التي تضيف لمسة استثنائية إلى أناقتك.',
-                ctaText: 'اكتشفي التشكيلة',
-                ctaLink: h.cta_link || '/products',
-                badge: undefined,
-                active: true,
-                order: 1,
-              };
-            }
-            if (idx === 1 || h.id === 'hero-2') {
-              return {
-                _id: h.id || 'hero-2',
-                image: '/hero-banner-2.jpg',
-                title: h.title || 'إشراقة ساحرة ولمسات مكياج ناعمة',
-                subtitle: h.subtitle || 'أحدث درجات الروج والباليتات الأصلية',
-                description: h.description || 'ألوان تدوم طوال اليوم وتركيبات غنية تبرز جمالك الطبيعي وتمنحك الثقة في كل خطوة.',
-                ctaText: h.cta_text || 'تسوقي المكياج',
-                ctaLink: h.cta_link || '/products?category=makeup',
-                badge: h.badge || 'الأكثر مبيعاً',
-                active: true,
-                order: 2,
-              };
-            }
-            if (idx === 2 || h.id === 'hero-3') {
-              return {
-                _id: h.id || 'hero-3',
-                image: '/hero-banner-3.jpg',
-                title: h.title || 'بريق الذهب وأناقة المجوهرات',
-                subtitle: h.subtitle || 'إكسسوارات مطلية بذهب عيار 18',
-                description: h.description || 'تصاميم استثنائية مقاومة للماء والبهتان لتبقى ذكرى خالدة ومظهرك متألقاً دائماً.',
-                ctaText: h.cta_text || 'تسوقي الإكسسوارات',
-                ctaLink: h.cta_link || '/products?category=accessories',
-                badge: h.badge || 'تصاميم حصرية',
-                active: true,
-                order: 3,
-              };
-            }
-            return {
-              _id: h.id,
-              image: h.image,
-              title: h.title,
-              subtitle: h.subtitle,
-              description: h.description,
-              ctaText: h.cta_text,
-              ctaLink: h.cta_link,
-              badge: h.badge,
-              active: h.active,
-              order: h.display_order,
-            };
-          })
+        ? heroData.map((h: any) => ({
+            _id: String(h.id),
+            image: h.image || '/hero-banner-1.jpg',
+            title: h.title || '',
+            subtitle: h.subtitle || '',
+            description: h.description || '',
+            ctaText: h.cta_text || h.ctaText || 'اكتشفي التشكيلة',
+            ctaLink: h.cta_link || h.ctaLink || '/products',
+            badge: h.badge || undefined,
+            active: h.active !== false && h.active !== 'false',
+            order: Number(h.display_order) || 0,
+            displayOrder: Number(h.display_order) || 0,
+          }))
         : defaultSlides;
 
       let mappedSettings: SiteSettings | null = null;
