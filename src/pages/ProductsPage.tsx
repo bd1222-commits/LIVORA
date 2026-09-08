@@ -47,6 +47,17 @@ export const ProductsPage: React.FC = () => {
     }
   }, [routeParams]);
 
+  // Resolve target category object if selectedCategory is not 'all'
+  const targetCat = useMemo(() => {
+    if (selectedCategory === 'all') return null;
+    return categories.find(
+      (c) =>
+        c.slug?.current === selectedCategory ||
+        c._id === selectedCategory ||
+        c.name === selectedCategory
+    );
+  }, [categories, selectedCategory]);
+
   // Compute filtered & sorted products
   const filteredProducts = useMemo(() => {
     return products
@@ -56,7 +67,10 @@ export const ProductsPage: React.FC = () => {
           const matchCategory =
             product.category?._ref === selectedCategory ||
             product.category?.slug === selectedCategory ||
-            product.category?.name === selectedCategory;
+            product.category?.name === selectedCategory ||
+            (targetCat &&
+              (product.category?._ref === targetCat._id ||
+               product.category?.slug === targetCat.slug?.current));
           if (!matchCategory) return false;
         }
 
@@ -89,10 +103,22 @@ export const ProductsPage: React.FC = () => {
         if (sortBy === 'discount') {
           return (b.discountPercentage || 0) - (a.discountPercentage || 0);
         }
+
+        // Apply manual sort order (smallest number first, fallback 999999)
+        if (selectedCategory !== 'all') {
+          const orderA = a.categorySortOrder ?? 999999;
+          const orderB = b.categorySortOrder ?? 999999;
+          if (orderA !== orderB) return orderA - orderB;
+        } else {
+          const orderA = a.allSortOrder ?? 999999;
+          const orderB = b.allSortOrder ?? 999999;
+          if (orderA !== orderB) return orderA - orderB;
+        }
+
         // default newest
         return new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime();
       });
-  }, [products, selectedCategory, selectedSpecialFilter, searchKeyword, priceRange, sortBy]);
+  }, [products, selectedCategory, targetCat, selectedSpecialFilter, searchKeyword, priceRange, sortBy]);
 
   const clearAllFilters = () => {
     setSelectedCategory('all');

@@ -14,18 +14,30 @@ export const FeaturedSection: React.FC = () => {
   const onSaleOffers = useMemo(() => products.filter((p) => p.isOnSale), [products]);
 
   const activeProducts = useMemo(() => {
+    let list = bestSellers;
     switch (activeTab) {
       case 'bestseller':
-        return bestSellers;
+        list = bestSellers;
+        break;
       case 'featured':
-        return featured;
+        list = featured;
+        break;
       case 'new':
-        return newArrivals;
+        list = newArrivals;
+        break;
       case 'offers':
-        return onSaleOffers;
+        list = onSaleOffers;
+        break;
       default:
-        return bestSellers;
+        list = bestSellers;
+        break;
     }
+    return [...list].sort((a, b) => {
+      const orderA = a.homeSortOrder ?? 999999;
+      const orderB = b.homeSortOrder ?? 999999;
+      if (orderA !== orderB) return orderA - orderB;
+      return new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime();
+    });
   }, [activeTab, bestSellers, featured, newArrivals, onSaleOffers]);
 
   const tabs = [

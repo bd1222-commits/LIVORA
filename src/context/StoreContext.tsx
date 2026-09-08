@@ -154,54 +154,182 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         active: c.active,
       }));
 
-      const mappedProducts = (prodsData || []).map((p: any) => ({
-        _id: String(p.id),
-        name: p.name,
-        slug: { current: p.slug },
-        mainImage: p.main_image,
-        additionalImages: p.additional_images,
-        price: p.price,
-        oldPrice: p.old_price,
-        discountPercentage: p.discount_percentage,
-        shortDescription: p.short_description,
-        description: p.description,
-        category: { _ref: p.category_id ? String(p.category_id) : undefined },
-        colors: p.colors,
-        sizes: p.sizes,
-        sku: p.sku,
-        displayStockCount: p.display_stock_count,
-        isFeatured: p.is_featured,
-        isBestSeller: p.is_best_seller,
-        isNew: p.is_new,
-        isGlobalBrand: Boolean(p.is_global_brand || p.details?.isGlobalBrand || p.details?.is_global_brand || false),
-        isVisible: p.is_visible !== false && p.is_visible !== 'false' && p.details?.is_visible !== false && p.details?.isVisible !== false,
-        rating: p.rating,
-        reviewsCount: p.reviews_count,
-        createdAt: p.created_at,
-        features: Array.isArray(p.features)
-          ? p.features
-          : Array.isArray(p.details?.features)
-          ? p.details.features
-          : typeof p.details?.features === 'string'
-          ? p.details.features.split('\n').map((s: string) => s.trim()).filter(Boolean)
-          : [],
-        imageTransform: p.image_transform || p.details?.imageTransform,
-        imageTransforms: p.image_transforms || p.details?.imageTransforms || {},
-        details: p.details,
-      }));
+      const mappedProducts = (prodsData || []).map((p: any) => {
+        const matchedCat = mappedCategories.find(
+          (c: any) =>
+            c._id === String(p.category_id) ||
+            c.slug?.current === String(p.category_id) ||
+            c.name === String(p.category_id)
+        );
 
-      const mappedHeroSlides = (heroData || []).map((h: any) => ({
-        _id: h.id,
-        image: h.image,
-        title: h.title,
-        subtitle: h.subtitle,
-        description: h.description,
-        ctaText: h.cta_text,
-        ctaLink: h.cta_link,
-        badge: h.badge,
-        active: h.active,
-        order: h.display_order,
-      }));
+        const homeSortOrder =
+          p.home_sort_order !== undefined && p.home_sort_order !== null
+            ? Number(p.home_sort_order)
+            : p.details?.home_sort_order !== undefined && p.details?.home_sort_order !== null
+            ? Number(p.details.home_sort_order)
+            : p.details?.homeSortOrder !== undefined && p.details?.homeSortOrder !== null
+            ? Number(p.details.homeSortOrder)
+            : undefined;
+
+        const allSortOrder =
+          p.all_sort_order !== undefined && p.all_sort_order !== null
+            ? Number(p.all_sort_order)
+            : p.details?.all_sort_order !== undefined && p.details?.all_sort_order !== null
+            ? Number(p.details.all_sort_order)
+            : p.details?.allSortOrder !== undefined && p.details?.allSortOrder !== null
+            ? Number(p.details.allSortOrder)
+            : undefined;
+
+        const categorySortOrder =
+          p.category_sort_order !== undefined && p.category_sort_order !== null
+            ? Number(p.category_sort_order)
+            : p.details?.category_sort_order !== undefined && p.details?.category_sort_order !== null
+            ? Number(p.details.category_sort_order)
+            : p.details?.categorySortOrder !== undefined && p.details?.categorySortOrder !== null
+            ? Number(p.details.categorySortOrder)
+            : undefined;
+
+        return {
+          _id: String(p.id),
+          name: p.name,
+          slug: { current: p.slug },
+          mainImage: p.main_image,
+          additionalImages: p.additional_images,
+          price: p.price,
+          oldPrice: p.old_price,
+          discountPercentage: p.discount_percentage,
+          shortDescription: p.short_description,
+          description: p.description,
+          category: {
+            _ref: p.category_id ? String(p.category_id) : undefined,
+            name: matchedCat?.name,
+            slug: matchedCat?.slug?.current,
+          },
+          homeSortOrder,
+          allSortOrder,
+          categorySortOrder,
+          colors: p.colors,
+          sizes: p.sizes,
+          sku: p.sku,
+          displayStockCount: p.display_stock_count,
+          isFeatured: p.is_featured,
+          isBestSeller: p.is_best_seller,
+          isNew: p.is_new,
+          isGlobalBrand: Boolean(p.is_global_brand || p.details?.isGlobalBrand || p.details?.is_global_brand || false),
+          isVisible: p.is_visible !== false && p.is_visible !== 'false' && p.details?.is_visible !== false && p.details?.isVisible !== false,
+          rating: p.rating,
+          reviewsCount: p.reviews_count,
+          createdAt: p.created_at,
+          features: Array.isArray(p.features)
+            ? p.features
+            : Array.isArray(p.details?.features)
+            ? p.details.features
+            : typeof p.details?.features === 'string'
+            ? p.details.features.split('\n').map((s: string) => s.trim()).filter(Boolean)
+            : [],
+          imageTransform: p.image_transform || p.details?.imageTransform,
+          imageTransforms: p.image_transforms || p.details?.imageTransforms || {},
+          details: p.details,
+        };
+      });
+
+      const defaultSlides = [
+        {
+          _id: 'hero-1',
+          image: '/hero-banner-1.jpg',
+          title: 'لمسة فخامة في كل تفصيل',
+          subtitle: 'تشكيلة ليفورا الجديدة لعام 2026',
+          description: 'اكتشفي تشكيلتنا المختارة بعناية من التفاصيل التي تضيف لمسة استثنائية إلى أناقتك.',
+          ctaText: 'اكتشفي التشكيلة',
+          ctaLink: '/products',
+          badge: undefined,
+          active: true,
+          order: 1,
+        },
+        {
+          _id: 'hero-2',
+          image: '/hero-banner-2.jpg',
+          title: 'إشراقة ساحرة ولمسات مكياج ناعمة',
+          subtitle: 'أحدث درجات الروج والباليتات الأصلية',
+          description: 'ألوان تدوم طوال اليوم وتركيبات غنية تبرز جمالك الطبيعي وتمنحك الثقة في كل خطوة.',
+          ctaText: 'تسوقي المكياج',
+          ctaLink: '/products?category=makeup',
+          badge: 'الأكثر مبيعاً',
+          active: true,
+          order: 2,
+        },
+        {
+          _id: 'hero-3',
+          image: '/hero-banner-3.jpg',
+          title: 'بريق الذهب وأناقة المجوهرات',
+          subtitle: 'إكسسوارات مطلية بذهب عيار 18',
+          description: 'تصاميم استثنائية مقاومة للماء والبهتان لتبقى ذكرى خالدة ومظهرك متألقاً دائماً.',
+          ctaText: 'تسوقي الإكسسوارات',
+          ctaLink: '/products?category=accessories',
+          badge: 'تصاميم حصرية',
+          active: true,
+          order: 3,
+        }
+      ];
+
+      const mappedHeroSlides = (heroData && heroData.length > 0)
+        ? heroData.map((h: any, idx: number) => {
+            if (idx === 0 || h.id === 'hero-1') {
+              return {
+                _id: h.id || 'hero-1',
+                image: '/hero-banner-1.jpg',
+                title: 'لمسة فخامة في كل تفصيل',
+                subtitle: h.subtitle || 'تشكيلة ليفورا الجديدة لعام 2026',
+                description: 'اكتشفي تشكيلتنا المختارة بعناية من التفاصيل التي تضيف لمسة استثنائية إلى أناقتك.',
+                ctaText: 'اكتشفي التشكيلة',
+                ctaLink: h.cta_link || '/products',
+                badge: undefined,
+                active: true,
+                order: 1,
+              };
+            }
+            if (idx === 1 || h.id === 'hero-2') {
+              return {
+                _id: h.id || 'hero-2',
+                image: '/hero-banner-2.jpg',
+                title: h.title || 'إشراقة ساحرة ولمسات مكياج ناعمة',
+                subtitle: h.subtitle || 'أحدث درجات الروج والباليتات الأصلية',
+                description: h.description || 'ألوان تدوم طوال اليوم وتركيبات غنية تبرز جمالك الطبيعي وتمنحك الثقة في كل خطوة.',
+                ctaText: h.cta_text || 'تسوقي المكياج',
+                ctaLink: h.cta_link || '/products?category=makeup',
+                badge: h.badge || 'الأكثر مبيعاً',
+                active: true,
+                order: 2,
+              };
+            }
+            if (idx === 2 || h.id === 'hero-3') {
+              return {
+                _id: h.id || 'hero-3',
+                image: '/hero-banner-3.jpg',
+                title: h.title || 'بريق الذهب وأناقة المجوهرات',
+                subtitle: h.subtitle || 'إكسسوارات مطلية بذهب عيار 18',
+                description: h.description || 'تصاميم استثنائية مقاومة للماء والبهتان لتبقى ذكرى خالدة ومظهرك متألقاً دائماً.',
+                ctaText: h.cta_text || 'تسوقي الإكسسوارات',
+                ctaLink: h.cta_link || '/products?category=accessories',
+                badge: h.badge || 'تصاميم حصرية',
+                active: true,
+                order: 3,
+              };
+            }
+            return {
+              _id: h.id,
+              image: h.image,
+              title: h.title,
+              subtitle: h.subtitle,
+              description: h.description,
+              ctaText: h.cta_text,
+              ctaLink: h.cta_link,
+              badge: h.badge,
+              active: h.active,
+              order: h.display_order,
+            };
+          })
+        : defaultSlides;
 
       let mappedSettings: SiteSettings | null = null;
       if (settingsData && settingsData.length > 0) {

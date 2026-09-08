@@ -38,6 +38,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
     isOnSale: false,
     isGlobalBrand: false,
     isVisible: true,
+    homeSortOrder: '' as number | string,
+    allSortOrder: '' as number | string,
+    categorySortOrder: '' as number | string,
     features: [] as string[],
   });
 
@@ -66,6 +69,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
           isOnSale: product.isOnSale || false,
           isGlobalBrand: product.isGlobalBrand || Boolean(product.details?.isGlobalBrand) || Boolean(product.details?.is_global_brand) || false,
           isVisible: product.isVisible !== false,
+          homeSortOrder: product.homeSortOrder ?? product.details?.home_sort_order ?? product.details?.homeSortOrder ?? '',
+          allSortOrder: product.allSortOrder ?? product.details?.all_sort_order ?? product.details?.allSortOrder ?? '',
+          categorySortOrder: product.categorySortOrder ?? product.details?.category_sort_order ?? product.details?.categorySortOrder ?? '',
           features: product.features || product.details?.features || [],
         });
       }
@@ -141,6 +147,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
     try {
       const productObj = productId ? products.find(p => p._id === productId) : null;
       const existingDetails = (typeof productObj?.details === 'object' && productObj?.details !== null) ? productObj.details : {};
+      const homeOrderVal = formData.homeSortOrder !== '' && formData.homeSortOrder !== null && formData.homeSortOrder !== undefined
+        ? Number(formData.homeSortOrder)
+        : null;
+      const allOrderVal = formData.allSortOrder !== '' && formData.allSortOrder !== null && formData.allSortOrder !== undefined
+        ? Number(formData.allSortOrder)
+        : null;
+      const catOrderVal = formData.categorySortOrder !== '' && formData.categorySortOrder !== null && formData.categorySortOrder !== undefined
+        ? Number(formData.categorySortOrder)
+        : null;
+
       const cleanFeatures = formData.features.map(f => f.trim()).filter(Boolean);
 
       const dbData = {
@@ -168,6 +184,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
           is_global_brand: formData.isGlobalBrand,
           is_visible: formData.isVisible,
           isVisible: formData.isVisible,
+          home_sort_order: homeOrderVal,
+          homeSortOrder: homeOrderVal,
+          all_sort_order: allOrderVal,
+          allSortOrder: allOrderVal,
+          category_sort_order: catOrderVal,
+          categorySortOrder: catOrderVal,
           features: cleanFeatures,
           imageTransform: formData.imageTransform,
           imageTransforms: {
@@ -433,6 +455,46 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
               </label>
             </div>
             
+            <h3 className="text-lg font-bold text-white border-b border-white/10 pb-2 mt-6">ترتيب ظهور المنتج (الأصغر يظهر أولاً)</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-stone-300 mb-1.5">ترتيب الصفحة الرئيسية</label>
+                <input
+                  type="number"
+                  name="homeSortOrder"
+                  value={formData.homeSortOrder}
+                  onChange={handleChange}
+                  placeholder="مثال: 1"
+                  min="1"
+                  className="w-full bg-[#141414] border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-[#C8A96B] text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-stone-300 mb-1.5">ترتيب جميع المنتجات</label>
+                <input
+                  type="number"
+                  name="allSortOrder"
+                  value={formData.allSortOrder}
+                  onChange={handleChange}
+                  placeholder="مثال: 1"
+                  min="1"
+                  className="w-full bg-[#141414] border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-[#C8A96B] text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-stone-300 mb-1.5">ترتيب صفحة القسم</label>
+                <input
+                  type="number"
+                  name="categorySortOrder"
+                  value={formData.categorySortOrder}
+                  onChange={handleChange}
+                  placeholder="مثال: 1"
+                  min="1"
+                  className="w-full bg-[#141414] border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-[#C8A96B] text-sm"
+                />
+              </div>
+            </div>
+
             <h3 className="text-lg font-bold text-white border-b border-white/10 pb-2 mt-6">صور المنتج</h3>
             <div className="space-y-6">
               <ImageUploader 

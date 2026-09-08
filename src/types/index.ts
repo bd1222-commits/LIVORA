@@ -47,6 +47,9 @@ export interface Product {
   isGlobalBrand?: boolean;
   isVisible?: boolean;
   is_visible?: boolean;
+  homeSortOrder?: number;
+  allSortOrder?: number;
+  categorySortOrder?: number;
   rating?: number;
   reviewsCount?: number;
   createdAt?: string;
