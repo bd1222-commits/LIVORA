@@ -132,7 +132,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         supabase.from('categories').select('*').order('display_order', { ascending: true }),
         supabase.from('products').select('*'),
         supabase.from('hero_slides').select('*').order('display_order', { ascending: true }),
-        supabase.from('testimonials').select('*').order('display_order', { ascending: true }),
         supabase.from('site_settings').select('*').limit(1)
       ]);
       
@@ -142,7 +141,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         { data: catsData },
         { data: prodsData },
         { data: heroData },
-        { data: testData },
         { data: settingsData }
       ] = responses;
 
@@ -205,18 +203,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         order: h.display_order,
       }));
 
-      const mappedTestimonials = (testData || []).map((t: any) => ({
-        _id: t.id,
-        name: t.name,
-        city: t.city,
-        text: t.text,
-        rating: t.rating,
-        image: t.image,
-        active: t.active,
-        order: t.display_order,
-        date: t.date,
-      }));
-
       let mappedSettings: SiteSettings | null = null;
       if (settingsData && settingsData.length > 0) {
         const s = settingsData[0] || {};
@@ -249,7 +235,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setCategories(mappedCategories);
       setProducts(mappedProducts);
       setHeroSlides(mappedHeroSlides.filter(h => h.active));
-      setTestimonials(mappedTestimonials.filter(t => t.active));
       if (mappedSettings) setSiteSettings(mappedSettings);
     } catch (e) {
       console.error('Error fetching data from Supabase:', e);
