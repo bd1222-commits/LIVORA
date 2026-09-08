@@ -1,20 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { ProductCard } from '../product/ProductCard';
 import { Flame, Sparkles, Zap, Tag, ArrowLeft } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 
 export const FeaturedSection: React.FC = () => {
   const { products, navigateTo } = useStore();
   const [activeTab, setActiveTab] = useState<'bestseller' | 'featured' | 'new' | 'offers'>('bestseller');
 
   // Filter products according to requirements
-  const bestSellers = products.filter((p) => p.isBestSeller);
-  const featured = products.filter((p) => p.isFeatured);
-  const newArrivals = products.filter((p) => p.isNew);
-  const onSaleOffers = products.filter((p) => p.isOnSale);
+  const bestSellers = useMemo(() => products.filter((p) => p.isBestSeller), [products]);
+  const featured = useMemo(() => products.filter((p) => p.isFeatured), [products]);
+  const newArrivals = useMemo(() => products.filter((p) => p.isNew), [products]);
+  const onSaleOffers = useMemo(() => products.filter((p) => p.isOnSale), [products]);
 
-  const getActiveList = () => {
+  const activeProducts = useMemo(() => {
     switch (activeTab) {
       case 'bestseller':
         return bestSellers;
@@ -27,9 +26,7 @@ export const FeaturedSection: React.FC = () => {
       default:
         return bestSellers;
     }
-  };
-
-  const activeProducts = getActiveList();
+  }, [activeTab, bestSellers, featured, newArrivals, onSaleOffers]);
 
   const tabs = [
     {
@@ -101,21 +98,12 @@ export const FeaturedSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Products Grid with Animated Switch */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.3 }}
-            className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-6"
-          >
-            {activeProducts.slice(0, 8).map((product) => (
-              <ProductCard key={product._id} product={product} />
-            ))}
-          </motion.div>
-        </AnimatePresence>
+        {/* Products Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-6">
+          {activeProducts.slice(0, 8).map((product) => (
+            <ProductCard key={product._id} product={product} />
+          ))}
+        </div>
 
         {/* View More Button */}
         <div className="mt-8 sm:mt-12 text-center">
