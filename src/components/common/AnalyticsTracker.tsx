@@ -3,39 +3,42 @@ import { supabase } from '../../lib/supabase/client';
 
 export const AnalyticsTracker = () => {
   useEffect(() => {
-    // Only track if we are not in the admin panel
+    // 1. Skip tracking if in admin panel
     if (window.location.pathname.startsWith('/admin')) return;
 
-    const trackVisit = async () => {
+    // 2. Session deduplication: Only record ONE visit per browser session
+    const sessionActiveKey = 'livora_session_active_v1';
+    if (sessionStorage.getItem(sessionActiveKey)) {
+      return; // Already recorded for this session; prevent duplicate tracking
+    }
+    sessionStorage.setItem(sessionActiveKey, Date.now().toString());
+
+    // 3. Non-blocking background tracking execution
+    const timer = setTimeout(async () => {
       try {
-        // Get or create unique anonymous visitor ID in localStorage
-        let vid = localStorage.getItem('livora_vid');
+        // Persistent Visitor ID per browser/device
+        let vid = localStorage.getItem('livora_visitor_id');
         if (!vid) {
           vid = 'v_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
-          localStorage.setItem('livora_vid', vid);
+          localStorage.setItem('livora_visitor_id', vid);
         }
 
         const todayStr = new Date().toISOString().split('T')[0];
-        const sessionKey = `visited_today_${todayStr}`;
 
-        // Prevent multiple visit logs in the same session on page navigation
-        if (sessionStorage.getItem(sessionKey)) return;
-        sessionStorage.setItem(sessionKey, 'true');
-
-        // 1. Insert into visits table with session_id = vid
+        // A. Insert real visit record into visits table
         try {
           await supabase.from('visits').insert([
             {
               path: window.location.pathname,
               session_id: vid,
-              visited_at: new Date().toISOString()
-            }
+              visited_at: new Date().toISOString(),
+            },
           ]);
-        } catch (e) {
-          // Silent fallback if visits table missing or restricted
+        } catch {
+          // Silent catch if RLS or table schema requires fallback
         }
 
-        // 2. Real fallback in site_settings (No mock/fake numbers)
+        // B. Update real stats in site_settings as fallback
         try {
           const { data } = await supabase.from('site_settings').select('id, shipping_info').limit(1);
           if (data && data.length > 0) {
@@ -58,27 +61,28 @@ export const AnalyticsTracker = () => {
             const newStats = {
               ...stats,
               totalVisits: isNewGlobalVisitor ? (stats.totalVisits || 0) + 1 : (stats.totalVisits || 0),
-              todayVisits: isNewTodayVisitor ? todayVidsSet.size : 1,
+              todayVisits: stats.lastDate === todayStr ? (stats.todayVisits || 0) + (isNewTodayVisitor ? 1 : 0) : 1,
               last7Days: (stats.last7Days || 0) + (isNewTodayVisitor ? 1 : 0),
               last30Days: (stats.last30Days || 0) + (isNewTodayVisitor ? 1 : 0),
               lastDate: todayStr,
-              uniqueVids: Array.from(uniqueSet).slice(-1000),
-              todayVids: Array.from(todayVidsSet)
+              uniqueVids: Array.from(uniqueSet).slice(-2000),
+              todayVids: Array.from(todayVidsSet),
             };
 
-            await supabase.from('site_settings').update({
-              shipping_info: JSON.stringify(newStats)
-            }).eq('id', row.id);
+            await supabase
+              .from('site_settings')
+              .update({ shipping_info: JSON.stringify(newStats) })
+              .eq('id', row.id);
           }
-        } catch (e) {
+        } catch {
           // Silent fallback
         }
       } catch (err) {
-        console.error('Analytics error:', err);
+        console.error('Analytics tracking error:', err);
       }
-    };
+    }, 800); // 800ms delay to ensure page load is completely uninterrupted
 
-    trackVisit();
+    return () => clearTimeout(timer);
   }, []);
 
   return null;
