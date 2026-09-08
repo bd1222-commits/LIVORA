@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useStore } from '../../context/StoreContext';
-import { ArrowRight, Save } from 'lucide-react';
+import { ArrowRight, Save, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase/client';
 import { ImageUploader } from './ImageUploader';
 
 export const BannerForm: React.FC<{ bannerId?: string }> = ({ bannerId }) => {
   const { heroSlides, navigateTo, refreshAllData, showToast } = useStore();
   const [loading, setLoading] = useState(false);
+  const [fetchingData, setFetchingData] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -21,22 +22,56 @@ export const BannerForm: React.FC<{ bannerId?: string }> = ({ bannerId }) => {
   });
 
   useEffect(() => {
-    if (bannerId) {
-      const banner = heroSlides.find((b) => b.id === bannerId);
-      if (banner) {
+    const loadBannerData = async () => {
+      if (!bannerId) return;
+
+      setFetchingData(true);
+
+      // 1. Try finding in context first
+      const contextSlide = heroSlides.find((b) => b._id === bannerId || (b as any).id === bannerId);
+      if (contextSlide) {
         setFormData({
-          title: banner.title || '',
-          subtitle: banner.subtitle || '',
-          description: banner.description || '',
-          image: banner.image || '',
-          ctaText: banner.ctaText || '',
-          ctaLink: banner.ctaLink || '',
-          badge: banner.badge || '',
-          order: banner.displayOrder || 0,
-          active: banner.active ?? true,
+          title: contextSlide.title || '',
+          subtitle: contextSlide.subtitle || '',
+          description: contextSlide.description || '',
+          image: contextSlide.image || '',
+          ctaText: contextSlide.ctaText || '',
+          ctaLink: contextSlide.ctaLink || '',
+          badge: contextSlide.badge || '',
+          order: contextSlide.order ?? (contextSlide as any).displayOrder ?? 0,
+          active: contextSlide.active ?? true,
         });
       }
-    }
+
+      // 2. Fetch directly from Supabase to guarantee exact current content
+      try {
+        const { data, error } = await supabase
+          .from('hero_slides')
+          .select('*')
+          .eq('id', bannerId)
+          .single();
+
+        if (data && !error) {
+          setFormData({
+            title: data.title || '',
+            subtitle: data.subtitle || '',
+            description: data.description || '',
+            image: data.image || '',
+            ctaText: data.cta_text || '',
+            ctaLink: data.cta_link || '',
+            badge: data.badge || '',
+            order: data.display_order ?? 0,
+            active: data.active ?? true,
+          });
+        }
+      } catch (err) {
+        console.error('Error loading banner from Supabase:', err);
+      } finally {
+        setFetchingData(false);
+      }
+    };
+
+    loadBannerData();
   }, [bannerId, heroSlides]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -44,7 +79,7 @@ export const BannerForm: React.FC<{ bannerId?: string }> = ({ bannerId }) => {
     if (type === 'checkbox') {
       setFormData((prev) => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
     } else if (type === 'number') {
-      setFormData((prev) => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: value === '' ? 0 : Number(value) }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -62,7 +97,7 @@ export const BannerForm: React.FC<{ bannerId?: string }> = ({ bannerId }) => {
       cta_text: formData.ctaText,
       cta_link: formData.ctaLink,
       badge: formData.badge,
-      display_order: formData.order,
+      display_order: Number(formData.order) || 0,
       active: formData.active,
     };
 
@@ -70,7 +105,7 @@ export const BannerForm: React.FC<{ bannerId?: string }> = ({ bannerId }) => {
       if (bannerId) {
         const { error } = await supabase.from('hero_slides').update(dbData).eq('id', bannerId);
         if (error) throw error;
-        showToast('تم التعديل', 'تم تعديل البانر بنجاح', 'success');
+        showToast('تم التعديل', 'تم حفظ التعديلات على البانر بنجاح', 'success');
       } else {
         const { error } = await supabase.from('hero_slides').insert([dbData]);
         if (error) throw error;
@@ -79,7 +114,7 @@ export const BannerForm: React.FC<{ bannerId?: string }> = ({ bannerId }) => {
       refreshAllData();
       navigateTo('admin', { adminPath: '/banners' });
     } catch (err: any) {
-      showToast('خطأ', err.message || 'فشلت العملية', 'info');
+      showToast('خطأ', err.message || 'فشلت عملية الحفظ', 'info');
     } finally {
       setLoading(false);
     }
@@ -90,105 +125,126 @@ export const BannerForm: React.FC<{ bannerId?: string }> = ({ bannerId }) => {
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigateTo('admin', { adminPath: '/banners' })}
-          className="p-2 bg-white/5 text-stone-300 hover:bg-white/10 rounded-xl transition-colors"
+          className="p-2 bg-white/5 text-stone-300 hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
+          title="رجوع للقائمة"
         >
           <ArrowRight className="w-5 h-5" />
         </button>
         <h2 className="text-2xl font-bold font-['Cinzel'] text-[#C8A96B]">
-          {bannerId ? 'تعديل البانر' : 'إضافة بانر جديد'}
+          {bannerId ? 'تعديل بيانات ومحتوى البانر' : 'إضافة بانر جديد'}
         </h2>
+        {fetchingData && (
+          <div className="flex items-center gap-1.5 text-xs text-[#C8A96B] animate-pulse">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>جاري تحميل المحتوى الحالي...</span>
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="bg-[#1F1F1F] rounded-2xl p-6 border border-white/10 shadow-lg space-y-6">
         <ImageUploader 
-          label="صورة البانر *" 
+          label="صورة البانر الرئيسية *" 
           value={formData.image} 
           onChange={(url) => setFormData(prev => ({ ...prev, image: url }))} 
         />
 
         <div>
-          <label className="block text-sm font-bold text-stone-300 mb-2">العنوان الرئيسي</label>
+          <label className="block text-sm font-bold text-stone-300 mb-2">الشارة العلويـة (Badge)</label>
           <input
             type="text"
-            name="title"
-            value={formData.title}
+            name="badge"
+            value={formData.badge}
             onChange={handleChange}
+            placeholder="مثال: تخفيضات موسمية حصرية"
             className="w-full bg-[#141414] border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-[#C8A96B]"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-stone-300 mb-2">النص الفرعي</label>
+          <label className="block text-sm font-bold text-stone-300 mb-2">النص الفرعي (Subtitle)</label>
           <input
             type="text"
             name="subtitle"
             value={formData.subtitle}
             onChange={handleChange}
+            placeholder="مثال: تشكيلة ليفورا الجديدة لعام 2026"
             className="w-full bg-[#141414] border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-[#C8A96B]"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-stone-300 mb-2">الوصف</label>
+          <label className="block text-sm font-bold text-stone-300 mb-2">العنوان الرئيسي (Headline / Title)</label>
+          <input
+            type="text"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            placeholder="مثال: لمسة فخامة في كل تفصيل"
+            required
+            className="w-full bg-[#141414] border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-[#C8A96B]"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-bold text-stone-300 mb-2">الوصف التفصيلي (Description)</label>
           <textarea
             name="description"
             value={formData.description}
             onChange={handleChange}
             rows={3}
+            placeholder="اكتشفي تشكيلتنا المختارة بعناية..."
             className="w-full bg-[#141414] border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-[#C8A96B]"
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-bold text-stone-300 mb-2">نص الزر</label>
+            <label className="block text-sm font-bold text-stone-300 mb-2">نص الزر (CTA Text)</label>
             <input
               type="text"
               name="ctaText"
               value={formData.ctaText}
               onChange={handleChange}
+              placeholder="مثال: اكتشفي التشكيلة"
               className="w-full bg-[#141414] border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-[#C8A96B]"
             />
           </div>
           <div>
-            <label className="block text-sm font-bold text-stone-300 mb-2">رابط الزر</label>
+            <label className="block text-sm font-bold text-stone-300 mb-2">رابط الزر (CTA Link)</label>
             <input
               type="text"
               name="ctaLink"
               value={formData.ctaLink}
               onChange={handleChange}
+              placeholder="/products"
               dir="ltr"
               className="w-full bg-[#141414] border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-[#C8A96B]"
             />
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-bold text-stone-300 mb-2">الشارة (Badge)</label>
-          <input
-            type="text"
-            name="badge"
-            value={formData.badge}
-            onChange={handleChange}
-            className="w-full bg-[#141414] border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-[#C8A96B]"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-bold text-stone-300 mb-2">الترتيب</label>
+            <label className="block text-sm font-bold text-stone-300 mb-2">ترتيب العرض (Order)</label>
             <input
               type="number"
               name="order"
               value={formData.order}
               onChange={handleChange}
+              min="1"
               className="w-full bg-[#141414] border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-[#C8A96B]"
             />
           </div>
-          <div className="flex items-center pt-8">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" name="active" checked={formData.active} onChange={handleChange} className="w-5 h-5 accent-[#C8A96B] bg-[#141414] border-white/10 rounded" />
-              <span className="text-sm font-bold text-stone-300">مفعل</span>
+          <div className="flex items-center pt-2 sm:pt-7">
+            <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-white/5 border border-white/10 w-full">
+              <input 
+                type="checkbox" 
+                name="active" 
+                checked={formData.active} 
+                onChange={handleChange} 
+                className="w-5 h-5 accent-[#C8A96B] bg-[#141414] border-white/10 rounded" 
+              />
+              <span className="text-sm font-bold text-stone-300">تفعيل البانر (نشط في المتجر)</span>
             </label>
           </div>
         </div>
@@ -197,14 +253,14 @@ export const BannerForm: React.FC<{ bannerId?: string }> = ({ bannerId }) => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#C8A96B] hover:bg-[#DEC593] text-[#171717] font-bold py-3 px-8 rounded-xl transition-all shadow-lg flex items-center gap-2"
+            className="bg-[#C8A96B] hover:bg-[#DEC593] text-[#171717] font-bold py-3 px-8 rounded-xl transition-all shadow-lg flex items-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {loading ? (
               <div className="w-5 h-5 border-2 border-[#171717] border-t-transparent rounded-full animate-spin"></div>
             ) : (
               <>
                 <Save className="w-5 h-5" />
-                <span>حفظ التغييرات</span>
+                <span>حفظ جميع التغييرات</span>
               </>
             )}
           </button>

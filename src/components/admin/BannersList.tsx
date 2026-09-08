@@ -34,7 +34,7 @@ export const BannersList: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {heroSlides.map((slide) => (
-          <div key={slide.id} className="bg-[#1C1C1C] border border-white/5 rounded-2xl overflow-hidden group">
+          <div key={slide._id || slide.id} className="bg-[#1C1C1C] border border-white/5 rounded-2xl overflow-hidden group">
             <div className="h-48 relative">
               {slide.image ? (
                 <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
@@ -58,14 +58,16 @@ export const BannersList: React.FC = () => {
                 <span className="text-xs text-stone-500">الترتيب: {slide.displayOrder}</span>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => navigateTo('admin', { adminPath: `/banners/${slide.id}` })}
-                    className="p-2 bg-white/5 text-[#C8A96B] hover:bg-[#C8A96B] hover:text-[#171717] rounded-lg transition-colors"
+                    onClick={() => navigateTo('admin', { adminPath: `/banners/${slide._id || slide.id}` })}
+                    className="p-2 bg-white/5 text-[#C8A96B] hover:bg-[#C8A96B] hover:text-[#171717] rounded-lg transition-colors cursor-pointer"
+                    title="تعديل البانر"
                   >
                     <Edit3 className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => handleDelete(slide.id)}
-                    className="p-2 bg-white/5 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-colors"
+                    onClick={() => handleDelete(slide._id || slide.id)}
+                    className="p-2 bg-white/5 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-colors cursor-pointer"
+                    title="حذف البانر"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
