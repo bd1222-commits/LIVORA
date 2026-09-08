@@ -3,7 +3,25 @@ import { useStore } from '../../context/StoreContext';
 import { ArrowLeft } from 'lucide-react';
 
 export const SpecialOffersBanner: React.FC = () => {
-  const { navigateTo } = useStore();
+  const { heroSlides, navigateTo } = useStore();
+  const activeBanner = heroSlides.find((s) => s.active !== false && (s as any).active !== 'false') || heroSlides[0];
+
+  const title = activeBanner?.title || 'لمسة فخامة في كل تفصيل';
+  const description = activeBanner?.description || 'اكتشفي تشكيلتنا المختارة بعناية من التفاصيل التي تضيف لمسة استثنائية إلى أناقتك.';
+  const image = activeBanner?.image || '/hero-banner-1.jpg';
+  const ctaText = activeBanner?.ctaText || 'اكتشفي التشكيلة';
+  const ctaLink = activeBanner?.ctaLink || '/products';
+
+  const handleCtaClick = () => {
+    if (ctaLink?.includes('?category=')) {
+      const cat = ctaLink.split('?category=')[1];
+      navigateTo('products', { category: cat });
+    } else if (ctaLink?.startsWith('/')) {
+      navigateTo(ctaLink.replace('/', '') as any || 'products');
+    } else {
+      navigateTo('products');
+    }
+  };
 
   return (
     <section className="py-10 sm:py-20 bg-[#F6F0E8] overflow-hidden">
@@ -12,8 +30,8 @@ export const SpecialOffersBanner: React.FC = () => {
           {/* Background Ambient Image */}
           <div className="absolute inset-0 z-0 opacity-50">
             <img
-              src="/hero-banner-1.jpg"
-              alt="لمسة فخامة في كل تفصيل"
+              src={image}
+              alt={title}
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
             />
@@ -22,19 +40,19 @@ export const SpecialOffersBanner: React.FC = () => {
 
           <div className="relative z-10 p-5 sm:p-14 lg:p-16 max-w-2xl space-y-4 sm:space-y-6">
             <h3 className="text-xl sm:text-4xl lg:text-5xl font-black text-[#F6F0E8] leading-snug">
-              لمسة فخامة في كل تفصيل
+              {title}
             </h3>
 
             <p className="text-xs sm:text-sm text-stone-300 leading-relaxed font-normal">
-              اكتشفي تشكيلتنا المختارة بعناية من التفاصيل التي تضيف لمسة استثنائية إلى أناقتك.
+              {description}
             </p>
 
             <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 pt-1 sm:pt-2">
               <button
-                onClick={() => navigateTo('products')}
+                onClick={handleCtaClick}
                 className="px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-full bg-[#C8A96B] hover:bg-[#DEC593] text-[#171717] font-extrabold text-xs flex items-center gap-1.5 shadow-lg transition-all transform active:scale-95 cursor-pointer"
               >
-                <span>اكتشفي التشكيلة</span>
+                <span>{ctaText}</span>
                 <ArrowLeft className="w-3.5 h-3.5" />
               </button>
             </div>

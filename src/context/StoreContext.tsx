@@ -319,7 +319,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       setCategories(mappedCategories);
       setProducts(mappedProducts);
-      setHeroSlides(mappedHeroSlides.filter(h => h.active));
+      setHeroSlides(mappedHeroSlides);
       if (mappedSettings) setSiteSettings(mappedSettings);
     } catch (e) {
       console.error('Error fetching data from Supabase:', e);
