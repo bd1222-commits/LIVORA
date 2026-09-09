@@ -7,7 +7,16 @@ export const BannersList: React.FC = () => {
   const { heroSlides, navigateTo, refreshAllData, showToast } = useStore();
 
   const mainSlides = heroSlides.filter(s => String(s._id || s.id).startsWith('hero-'));
-  const promoSlide = heroSlides.find(s => String(s._id || s.id) === 'promo-1');
+  const dbPromoSlide = heroSlides.find(s => String(s._id || s.id) === 'promo-1');
+  
+  const promoSlide = dbPromoSlide || {
+    id: 'promo-1',
+    _id: 'promo-1',
+    title: 'أنوثة خالدة وفخامة تليق بك',
+    subtitle: 'اكتشفي أرقى الإكسسوارات، المكياج الأصلي، ومنتجات العناية المختارة بعناية للمرأة اليمنية الأنيقة مع خدمة توصيل لجميع المحافظات.',
+    image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1600&auto=format&fit=crop',
+    active: true,
+  };
 
   const handleDelete = async (id: string) => {
     if (window.confirm('هل أنت متأكد من حذف هذا البانر؟')) {
@@ -87,19 +96,9 @@ export const BannersList: React.FC = () => {
             <h2 className="text-2xl font-bold font-['Cinzel'] text-[#C8A96B]">بانر العروض الخاصة (الثابت)</h2>
             <p className="text-sm text-stone-400 mt-1">يظهر هذا البانر في قسم مستقل أسفل المنتجات في الصفحة الرئيسية.</p>
           </div>
-          {!promoSlide && (
-            <button
-              onClick={() => navigateTo('admin', { adminPath: '/banners/promo-1' })}
-              className="bg-[#C8A96B] hover:bg-[#DEC593] text-[#171717] px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-colors"
-            >
-              <Plus className="w-5 h-5" />
-              <span>إنشاء بانر العروض</span>
-            </button>
-          )}
         </div>
 
-        {promoSlide && (
-          <div className="bg-[#1C1C1C] border border-white/5 rounded-2xl overflow-hidden group max-w-2xl">
+        <div className="bg-[#1C1C1C] border border-white/5 rounded-2xl overflow-hidden group max-w-2xl">
             <div className="h-64 relative">
               {promoSlide.image ? (
                 <img src={promoSlide.image} alt={promoSlide.title} className="w-full h-full object-cover" />
@@ -133,7 +132,6 @@ export const BannersList: React.FC = () => {
               </div>
             </div>
           </div>
-        )}
       </div>
     </div>
   );

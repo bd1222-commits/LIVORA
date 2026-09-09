@@ -28,7 +28,23 @@ export const BannerForm: React.FC<{ bannerId?: string }> = ({ bannerId }) => {
       setFetchingData(true);
 
       // 1. Try finding in context first
-      const contextSlide = heroSlides.find((b) => b._id === bannerId || (b as any).id === bannerId);
+      let contextSlide = heroSlides.find((b) => b._id === bannerId || (b as any).id === bannerId);
+      
+      if (!contextSlide && bannerId === 'promo-1') {
+        contextSlide = {
+          id: 'promo-1',
+          _id: 'promo-1',
+          title: 'أنوثة خالدة وفخامة تليق بك',
+          subtitle: 'اكتشفي أرقى الإكسسوارات، المكياج الأصلي، ومنتجات العناية المختارة بعناية للمرأة اليمنية الأنيقة مع خدمة توصيل لجميع المحافظات.',
+          description: 'اكتشفي أرقى الإكسسوارات، المكياج الأصلي، ومنتجات العناية المختارة بعناية للمرأة اليمنية الأنيقة مع خدمة توصيل لجميع المحافظات.',
+          image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1600&auto=format&fit=crop',
+          ctaText: 'اكتشفي التشكيلة الآن',
+          ctaLink: '/products',
+          active: true,
+          displayOrder: 1,
+        } as any;
+      }
+
       if (contextSlide) {
         setFormData({
           title: contextSlide.title || '',
