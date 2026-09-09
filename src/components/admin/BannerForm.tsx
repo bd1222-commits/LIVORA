@@ -7,58 +7,6 @@ import { ImageUploader } from './ImageUploader';
 export const BannerForm: React.FC<{ bannerId?: string }> = ({ bannerId }) => {
   const { heroSlides, navigateTo, refreshAllData, showToast } = useStore();
   const [loading, setLoading] = useState(false);
-  const [diagnosticMode, setDiagnosticMode] = useState(false);
-
-  const runDiagnostic = async () => {
-    if (!bannerId) return alert('يرجى حفظ البانر كجديد أولاً أو تعديل بانر موجود لتشغيل الفحص.');
-    try {
-      setDiagnosticMode(true);
-      const log = [];
-      log.push('=== بدء تشخيص مسار التعديل ===');
-      
-      // 1. Get Auth Session
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      log.push('\n[1] فحص جلسة الأدمن:');
-      log.push('User ID: ' + (authData?.user?.id || 'لا يوجد'));
-      log.push('User Email: ' + (authData?.user?.email || 'لا يوجد'));
-      if (authError) log.push('Auth Error: ' + authError.message);
-
-      // 2. Select Record
-      log.push('\n[2] تجربة SELECT لنفس البانر (' + bannerId + '):');
-      const { data: selData, error: selError } = await supabase.from('hero_slides').select('*').eq('id', bannerId);
-      if (selError) log.push('SELECT Error: ' + selError.message);
-      else log.push('SELECT Result: ' + (selData?.length || 0) + ' صفوف وجدت');
-
-      // 3. Attempt Update
-      log.push('\n[3] تجربة UPDATE لنفس البانر:');
-      const dummyUpdate = { title: formData.title + ' (اختبار)' };
-      const { data: upData, error: upError, count } = await supabase
-        .from('hero_slides')
-        .update(dummyUpdate)
-        .eq('id', bannerId)
-        .select('*');
-
-      if (upError) {
-        log.push('UPDATE Error: ' + upError.message + ' (الكود: ' + upError.code + ')');
-      } else {
-        log.push('UPDATE Success (No Errors thrown)');
-        log.push('الصفوف التي تم تعديلها فعلياً: ' + (upData?.length || 0));
-        if (!upData || upData.length === 0) {
-          log.push('النتيجة: 0 صفوف. هذا يعني أن RLS (UPDATE Policy) منع العملية بالرغم من عدم وجود خطأ، أو أن ID غير موجود.');
-        } else {
-          log.push('النتيجة: تم التعديل بنجاح! السجل الجديد عنوانه: ' + upData[0].title);
-          // Revert the update
-          await supabase.from('hero_slides').update({ title: formData.title }).eq('id', bannerId);
-        }
-      }
-
-      alert(log.join('\n'));
-    } catch (e: any) {
-      alert('خطأ أثناء التشخيص: ' + e.message);
-    } finally {
-      setDiagnosticMode(false);
-    }
-  };
   const [fetchingData, setFetchingData] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -323,34 +271,21 @@ export const BannerForm: React.FC<{ bannerId?: string }> = ({ bannerId }) => {
           </div>
         </div>
 
-        <div className="flex gap-4">
+        <div className="border-t border-white/10 pt-6 flex justify-end gap-4">
           <button
             type="button"
             onClick={() => navigateTo('admin', { adminPath: '/banners' })}
-            className="flex-1 bg-[#1C1C1C] border border-white/10 hover:bg-white/5 text-white py-3 rounded-xl font-bold transition-colors"
+            className="px-6 py-3 bg-[#1C1C1C] border border-white/10 hover:bg-white/5 text-white rounded-xl font-bold transition-colors"
           >
             إلغاء
           </button>
-          {bannerId && (
-            <button
-              type="button"
-              onClick={runDiagnostic}
-              disabled={diagnosticMode}
-              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition-colors"
-            >
-              {diagnosticMode ? 'جاري التشخيص...' : 'تشخيص حفظ البانر'}
-            </button>
-          )}
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-[#C8A96B] hover:bg-[#DEC593] text-[#171717] py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+            className="bg-[#C8A96B] hover:bg-[#DEC593] text-[#171717] font-bold py-3 px-8 rounded-xl transition-all shadow-lg flex items-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {loading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>جاري الحفظ...</span>
-              </>
+              <div className="w-5 h-5 border-2 border-[#171717] border-t-transparent rounded-full animate-spin"></div>
             ) : (
               <>
                 <Save className="w-5 h-5" />
