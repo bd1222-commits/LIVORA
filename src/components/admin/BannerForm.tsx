@@ -103,15 +103,28 @@ export const BannerForm: React.FC<{ bannerId?: string }> = ({ bannerId }) => {
 
     try {
       if (bannerId) {
-        const { error } = await supabase.from('hero_slides').update(dbData).eq('id', bannerId);
+        const { data, error } = await supabase
+          .from('hero_slides')
+          .update(dbData)
+          .eq('id', bannerId)
+          .select();
+
         if (error) throw error;
+        if (!data || data.length === 0) {
+          throw new Error('لم يتم تعديل السجل في Supabase. تأكد من تفعيل سياسة التعديل (RLS policy: Allow public all access) لجدول hero_slides.');
+        }
         showToast('تم التعديل', 'تم حفظ التعديلات على البانر بنجاح', 'success');
       } else {
-        const { error } = await supabase.from('hero_slides').insert([dbData]);
+        const newId = 'hero-' + Date.now();
+        const { data, error } = await supabase
+          .from('hero_slides')
+          .insert([{ id: newId, ...dbData }])
+          .select();
+
         if (error) throw error;
         showToast('تمت الإضافة', 'تمت إضافة البانر بنجاح', 'success');
       }
-      refreshAllData();
+      await refreshAllData();
       navigateTo('admin', { adminPath: '/banners' });
     } catch (err: any) {
       showToast('خطأ', err.message || 'فشلت عملية الحفظ', 'info');

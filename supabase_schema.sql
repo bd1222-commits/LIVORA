@@ -89,7 +89,7 @@ ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow public read access on categories" ON categories FOR SELECT USING (true);
 CREATE POLICY "Allow public read access on products" ON products FOR SELECT USING (true);
-CREATE POLICY "Allow public read access on hero_slides" ON hero_slides FOR SELECT USING (true);
+CREATE POLICY "Allow public all access on hero_slides" ON hero_slides FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read access on testimonials" ON testimonials FOR SELECT USING (true);
 CREATE POLICY "Allow public read access on site_settings" ON site_settings FOR SELECT USING (true);
 
