@@ -4,12 +4,13 @@ import { ArrowLeft } from 'lucide-react';
 
 export const SpecialOffersBanner: React.FC = () => {
   const { heroSlides, navigateTo } = useStore();
-  const activeBanner = heroSlides.find((s) => s.active !== false && (s as any).active !== 'false') || heroSlides[0];
+  const activeBanner = heroSlides.find((s) => String(s._id) === 'promo-1' || String((s as any).id) === 'promo-1');
 
-  const title = activeBanner?.title || 'لمسة فخامة في كل تفصيل';
-  const description = activeBanner?.description || 'اكتشفي تشكيلتنا المختارة بعناية من التفاصيل التي تضيف لمسة استثنائية إلى أناقتك.';
-  const image = activeBanner?.image || '/hero-banner-1.jpg';
-  const ctaText = activeBanner?.ctaText || 'اكتشفي التشكيلة';
+  // If no promo banner exists in the DB, fallback to default text, or don't render it.
+  const title = activeBanner?.title || 'أنوثة خالدة وفخامة تليق بك';
+  const description = activeBanner?.description || 'اكتشفي أرقى الإكسسوارات، المكياج الأصلي، ومنتجات العناية المختارة بعناية للمرأة اليمنية الأنيقة مع خدمة توصيل لجميع المحافظات.';
+  const image = activeBanner?.image || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1600&auto=format&fit=crop';
+  const ctaText = activeBanner?.ctaText || 'اكتشفي التشكيلة الآن';
   const ctaLink = activeBanner?.ctaLink || '/products';
 
   const handleCtaClick = () => {

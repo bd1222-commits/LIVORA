@@ -105,8 +105,7 @@ export const BannerForm: React.FC<{ bannerId?: string }> = ({ bannerId }) => {
       if (bannerId) {
         const updateResult = await supabase
           .from('hero_slides')
-          .update(dbData)
-          .eq('id', bannerId)
+          .upsert({ id: bannerId, ...dbData })
           .select('*'); // Select all to see what is returned
         
         console.log('Update Result for ID', bannerId, ':', updateResult);

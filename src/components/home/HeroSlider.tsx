@@ -7,7 +7,9 @@ export const HeroSlider: React.FC = () => {
   const { heroSlides, navigateTo } = useStore();
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
-  const activeSlides = heroSlides.filter((s) => s.active !== false && (s as any).active !== 'false');
+  const activeSlides = heroSlides.filter(
+    (s) => s.active !== false && (s as any).active !== 'false' && (String(s._id).startsWith('hero-') || String((s as any).id).startsWith('hero-'))
+  );
 
   useEffect(() => {
     if (activeSlides.length <= 1) return;
